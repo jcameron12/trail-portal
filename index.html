@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Total Mortgages — Document Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f4f6;
+    --white: #ffffff;
+    --border: #e5e5ea;
+    --border-light: #f0f0f5;
+    --text-primary: #1a1a2e;
+    --text-secondary: #6b6b80;
+    --text-muted: #9999aa;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --accent-hover: #1d4ed8;
+    --blue: #4a7cf7;
+    --blue-light: #eef2ff;
+    --green: #22c55e;
+    --green-light: #f0fdf4;
+    --amber: #f59e0b;
+    --amber-light: #fffbeb;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+
+  /* Nav */
+  .topnav { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-mark { width: 30px; height: 30px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; }
+  .nav-name { font-weight: 600; font-size: 15px; }
+  .test-pill { background: var(--amber-light); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 500; }
+
+  /* Layout */
+  .page { max-width: 800px; margin: 0 auto; padding: 28px 20px 80px; }
+  .page-header { margin-bottom: 22px; }
+  .page-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
+  .page-header p { font-size: 13px; color: var(--text-secondary); }
+
+  /* Steps */
+  .step-bar { display: flex; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 18px; box-shadow: var(--shadow-sm); }
+  .step-item { flex: 1; padding: 11px 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted); border-right: 1px solid var(--border); }
+  .step-item:last-child { border-right: none; }
+  .step-item.active { color: var(--accent); background: var(--accent-light); }
+  .step-item.done { color: var(--green); background: var(--green-light); }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.07); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .step-item.active .step-num { background: var(--accent); color: white; }
+  .step-item.done .step-num { background: var(--green); color: white; }
+
+  /* Card */
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); margin-bottom: 12px; overflow: hidden; }
+  .card-head { padding: 18px 20px 0; display: flex; align-items: center; gap: 12px; }
+  .card-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .ci-pink { background: var(--accent-light); }
+  .ci-blue { background: var(--blue-light); }
+  .ci-green { background: var(--green-light); }
+  .ci-amber { background: var(--amber-light); }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .card-body { padding: 16px 20px 20px; }
+
+  /* Upload */
+  .upload-zone { border: 1.5px dashed var(--border); border-radius: var(--radius-sm); padding: 36px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg); position: relative; overflow: hidden; }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: var(--accent-light); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-zone h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .upload-zone p { font-size: 12px; color: var(--text-secondary); }
+  .link { color: var(--accent); font-weight: 500; }
+  .file-ready { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--green-light); border: 1px solid rgba(34,197,94,0.25); border-radius: var(--radius-sm); margin-top: 10px; font-size: 13px; color: #16a34a; font-weight: 500; }
+
+  /* Fields */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field + .field { margin-top: 14px; }
+  label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  select, input[type="text"], input[type="password"] { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--white); width: 100%; outline: none; transition: border-color 0.15s, box-shadow 0.15s; appearance: none; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6b80' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* Action row */
+  .action-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 13px 20px; border-top: 1px solid var(--border-light); background: var(--bg); }
+  .error-msg { flex: 1; font-size: 12px; color: var(--red); }
+
+  /* Alerts */
+  .alert { display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.5; }
+  .alert-info { background: var(--blue-light); color: #2563eb; border: 1px solid rgba(74,124,247,0.2); }
+  .alert-success { background: var(--green-light); color: #16a34a; border: 1px solid rgba(34,197,94,0.2); }
+  .alert-warn { background: var(--amber-light); color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
+  .alert-error { background: var(--red-light); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+
+  /* Data grid */
+  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-light); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .dc { background: var(--white); padding: 11px 14px; }
+  .dc.full { grid-column: 1 / -1; }
+  .dc-label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-bottom: 3px; }
+  .dc-value { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .dc-value.accent { color: var(--accent); }
+  .dc-value.green { color: var(--green); }
+
+  /* Applicant tabs */
+  .appl-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .appl-tab { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--white); font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+  .appl-tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  /* Flags */
+  .flags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .flag-tag { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: var(--blue-light); color: var(--blue); border: 1px solid rgba(74,124,247,0.2); }
+
+  /* Toolbar */
+  .toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+  .toolbar-left { display: flex; align-items: center; gap: 8px; }
+  .filter-btn { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--white); font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover { background: var(--bg); }
+
+  /* Summary strip */
+  .summary-strip { display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin: 14px 20px 0; background: var(--white); }
+  .ss-item { flex: 1; padding: 11px 14px; border-right: 1px solid var(--border); text-align: center; }
+  .ss-item:last-child { border-right: none; }
+  .ss-label { font-size: 10px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .ss-value { font-size: 16px; font-weight: 700; }
+  .ss-value.pink { color: var(--accent); }
+
+  /* Doc rows — matching Figma */
+  .doc-section-hdr { padding: 7px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: var(--text-muted); background: var(--bg); border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+  .doc-row { display: flex; align-items: center; padding: 13px 20px; border-bottom: 1px solid var(--border-light); gap: 13px; transition: background 0.1s; cursor: pointer; }
+  .doc-row:last-child { border-bottom: none; }
+  .doc-row:hover { background: #fafafa; }
+  .doc-row.off { opacity: 0.45; }
+  .doc-file-icon { width: 34px; height: 34px; border-radius: 7px; background: var(--bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .doc-main { flex: 1; min-width: 0; }
+  .doc-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-meta { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+  .meta-dot { width: 2px; height: 2px; background: var(--text-muted); border-radius: 50%; display: inline-block; }
+  .doc-right { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+
+  /* Avatars */
+  .av { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; flex-shrink: 0; }
+  .av-pink { background: #e8619a; }
+  .av-blue { background: #4a7cf7; }
+  .av-teal { background: #14b8a6; }
+  .av-name { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+  /* Status pills */
+  .sp { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .sp-req { background: var(--accent-light); color: var(--accent); }
+  .sp-opt { background: var(--amber-light); color: var(--amber); }
+  .sp-requested { background: var(--blue-light); color: var(--blue); }
+
+  .icon-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: var(--white); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: var(--text-muted); transition: all 0.15s; flex-shrink: 0; }
+  .icon-btn:hover { background: var(--bg); }
+
+  /* Bottom bar */
+  .bottom-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+
+  /* Review */
+  .review-block { margin-bottom: 18px; }
+  .review-block-title { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+  .doc-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+  .doc-pill { background: var(--blue-light); color: var(--blue); border: 1px solid rgba(74,124,247,0.2); border-radius: 5px; padding: 3px 9px; font-size: 11px; font-weight: 500; }
+
+  pre.payload { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; font-size: 11px; color: var(--text-secondary); overflow-x: auto; max-height: 260px; overflow-y: auto; line-height: 1.6; font-family: 'SF Mono','Fira Code',monospace; }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border-light); margin: 16px 0; }
+
+  /* Loading */
+  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(244,244,246,0.88); z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 14px; backdrop-filter: blur(3px); }
+  .loading-overlay.active { display: flex; }
+  .spinner { width: 38px; height: 38px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; font-weight: 600; }
+  .loading-sub { font-size: 12px; color: var(--text-secondary); }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  @media (max-width: 580px) {
+    .data-grid { grid-template-columns: 1fr; }
+    .dc.full { grid-column: 1; }
+    .step-item span { display: none; }
+    .doc-right .av-name { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Reading PDF...</div>
+  <div class="loading-sub" id="loadingSub">Extracting client data</div>
+</div>
+
+<nav class="topnav">
+  <div class="nav-logo">
+    <div class="nav-mark">T</div>
+    <span class="nav-name">Total Mortgages</span>
+  </div>
+  <span id="navStatus" class="test-pill" style="display:none;">🔗 Content Snare Connected</span>
+</nav>
+
+<div class="page">
+
+  <div class="page-header">
+    <h1>Document Portal</h1>
+    <p>Upload a Trail Statement of Position to generate a tailored client document request</p>
+  </div>
+
+  <div class="step-bar">
+    <div class="step-item active" id="si1"><div class="step-num">1</div><span>Upload</span></div>
+    <div class="step-item" id="si2"><div class="step-num">2</div><span>Review Data</span></div>
+    <div class="step-item" id="si3"><div class="step-num">3</div><span>Documents</span></div>
+    <div class="step-item" id="si4"><div class="step-num">4</div><span>Send</span></div>
+  </div>
+
+  <!-- ═══ 1: UPLOAD ═══ -->
+  <div class="section active" id="section1">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon ci-pink">📄</div>
+        <div><div class="card-title">Upload Trail PDF</div><div class="card-sub">Statement of Position exported from Trail CRM</div></div>
+      </div>
+      <div class="card-body">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="pdfInput" accept=".pdf" />
+          <div style="font-size:32px;margin-bottom:10px;">📋</div>
+          <h3>Drop your Trail PDF here</h3>
+          <p>or <span class="link">browse files</span></p>
+        </div>
+        <div id="fileStatus"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon ci-blue">🏠</div>
+        <div><div class="card-title">Application Type</div><div class="card-sub">Select the mortgage type</div></div>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Mortgage Type</label>
+          <select id="mortgageType">
+            <option value="residential_purchase">Residential Purchase</option>
+            <option value="remortgage">Remortgage / Refinance</option>
+          </select>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label>Anthropic API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off" />
+        </div>
+        <div class="alert alert-info" style="margin-top:12px;margin-bottom:0;">
+          <span>ℹ️</span>
+          <span>Your key is used only for this extraction and never stored. Get yours at <a href="https://console.anthropic.com" target="_blank" style="color:inherit;font-weight:600;">console.anthropic.com</a></span>
+        </div>
+      </div>
+      <div class="action-row">
+        <span class="error-msg" id="step1Error"></span>
+        <button class="btn btn-primary" onclick="startExtraction()">Extract Client Data →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 2: REVIEW ═══ -->
+  <div class="section" id="section2">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon ci-green">✓</div>
+        <div><div class="card-title">Extracted Client Data</div><div class="card-sub">Pulled from Trail Statement of Position</div></div>
+      </div>
+      <div class="card-body">
+        <div class="appl-tabs" id="applTabs"></div>
+        <div id="applData"></div>
+        <div class="divider"></div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Financial Overview</div>
+        <div id="finData"></div>
+        <div class="flags-row" id="flagsRow"></div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-ghost" onclick="goTo(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goTo(3)">Build Document Checklist →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 3: DOCUMENTS ═══ -->
+  <div class="section" id="section3">
+    <div class="card">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="filter-btn">☰ Filter ▾</div>
+          <div class="filter-btn">⊞ Expand All ▾</div>
+          <span style="font-size:12px;color:var(--text-muted);" id="docCountLabel"></span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="goTo(4)">Request Documents →</button>
+      </div>
+      <div class="summary-strip" id="summaryStrip"></div>
+      <div id="docList" style="margin-top:14px;"></div>
+      <div class="bottom-bar">
+        <button class="btn btn-ghost btn-sm" onclick="goTo(2)">← Back</button>
+        <button class="btn btn-primary" onclick="goTo(4)">Review & Send →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 4: SEND ═══ -->
+  <div class="section" id="section4">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon ci-blue">🚀</div>
+        <div><div class="card-title">Review & Send to Content Snare</div><div class="card-sub">Confirm then send directly to Content Snare</div></div>
+      </div>
+      <div class="card-body">
+        <div id="finalReview"></div>
+
+        <!-- Auth status bar -->
+        <div id="authStatus" style="margin-top:14px;">
+          <div class="alert alert-warn" id="authNeeded">
+            <span>🔗</span>
+            <div><strong>Connect Content Snare</strong> — authorise once to enable live sending. Your session stays connected until you close the browser.
+              <div style="margin-top:10px;">
+                <button class="btn btn-primary btn-sm" onclick="startOAuth()">Connect Content Snare →</button>
+              </div>
+            </div>
+          </div>
+          <div class="alert alert-success" id="authDone" style="display:none;">
+            <span>✅</span>
+            <div><strong>Connected to Content Snare</strong> — ready to send.</div>
+          </div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-ghost" onclick="goTo(3)">← Back</button>
+        <button class="btn btn-primary" id="sendBtn" onclick="sendToContentSnare()" disabled>Send to Content Snare →</button>
+      </div>
+    </div>
+    <div class="card" id="resultCard" style="display:none;">
+      <div class="card-body" id="resultContent"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────
+const CS_CLIENT_ID     = 's7FYbJlw7XLmNg_bwKSaWQf-cOsxkbUA9fU4N6zmZPU';
+const CS_CLIENT_SECRET = 'E7REDdUQuLOcPp8uqU2KUPxwnHZgZuQUt7a0WDCsUvc';
+const CS_REDIRECT_URI  = window.location.origin + window.location.pathname;
+const CS_AUTH_URL      = 'https://api.contentsnare.com/oauth/authorization?client_id=' + CS_CLIENT_ID;
+const CS_TOKEN_URL     = 'https://api.contentsnare.com/oauth/token';
+const CS_API           = 'https://api.contentsnare.com/partner_api/v1';
+
+// ── State ─────────────────────────────────────────────────────────────────
+const S = {
+  pdfFile: null, mortgageType: 'residential_purchase',
+  data: null, checkedDocs: new Set(), currentApplicant: 0,
+  apiKey: null, csToken: null
+};
+
+// ── On load: check for OAuth callback code in URL ─────────────────────────
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) {
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+    exchangeCodeForToken(code);
+  }
+  // Restore token from sessionStorage if present
+  const saved = sessionStorage.getItem('cs_token');
+  if (saved) setConnected(saved);
+});
+
+async function exchangeCodeForToken(code) {
+  showLoading('Connecting...', 'Exchanging authorisation code with Content Snare');
+  try {
+    const resp = await fetch(CS_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: CS_CLIENT_ID,
+        client_secret: CS_CLIENT_SECRET,
+        redirect_uri: CS_REDIRECT_URI,
+        code
+      })
+    });
+    if (!resp.ok) throw new Error('Token exchange failed: ' + resp.status);
+    const d = await resp.json();
+    sessionStorage.setItem('cs_token', d.access_token);
+    setConnected(d.access_token);
+    hideLoading();
+  } catch(e) {
+    hideLoading();
+    alert('Content Snare connection failed: ' + e.message);
+  }
+}
+
+function setConnected(token) {
+  S.csToken = token;
+  document.getElementById('authNeeded').style.display = 'none';
+  document.getElementById('authDone').style.display   = 'flex';
+  document.getElementById('sendBtn').disabled = false;
+  const nav = document.getElementById('navStatus');
+  nav.style.display = 'inline-flex';
+  nav.style.background = 'var(--green-light)';
+  nav.style.color = '#16a34a';
+  nav.style.borderColor = 'rgba(34,197,94,0.25)';
+  nav.textContent = '✓ Content Snare Connected';
+}
+
+function startOAuth() {
+  const url = CS_AUTH_URL + '&redirect_uri=' + encodeURIComponent(CS_REDIRECT_URI) + '&response_type=code';
+  window.location.href = url;
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function goTo(n) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section'+n).classList.add('active');
+  document.querySelectorAll('.step-item').forEach((s,i) => {
+    s.classList.remove('active','done');
+    if(i+1<n) s.classList.add('done');
+    if(i+1===n) s.classList.add('active');
+  });
+  if(n===3) buildChecklist();
+  if(n===4) buildReview();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Upload ────────────────────────────────────────────────────────────────
+const zone = document.getElementById('uploadZone');
+const inp  = document.getElementById('pdfInput');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); if(e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
+inp.addEventListener('change', e => { if(e.target.files[0]) setFile(e.target.files[0]); });
+
+function setFile(f) {
+  if(f.type!=='application/pdf') { document.getElementById('fileStatus').innerHTML='<div class="alert alert-error" style="margin-top:10px;">⚠ Please upload a PDF file</div>'; return; }
+  S.pdfFile = f;
+  document.getElementById('fileStatus').innerHTML = `<div class="file-ready">✓ ${f.name} <span style="opacity:0.6;">(${(f.size/1024).toFixed(0)} KB)</span></div>`;
+  zone.style.borderColor = 'var(--green)';
+  zone.style.background = 'var(--green-light)';
+}
+
+// ── Extraction ────────────────────────────────────────────────────────────
+async function startExtraction() {
+  const err = document.getElementById('step1Error');
+  err.textContent = '';
+  if(!S.pdfFile) { err.textContent = 'Please upload a Trail PDF first.'; return; }
+  S.mortgageType = document.getElementById('mortgageType').value;
+  S.apiKey = document.getElementById('apiKey').value.trim();
+  if(!S.apiKey) { err.textContent = 'Please enter your Anthropic API key.'; return; }
+  showLoading('Reading PDF...','Extracting client data from Trail Statement of Position');
+  try {
+    const b64 = await toBase64(S.pdfFile);
+    S.data = await callClaude(b64);
+    hideLoading();
+    renderSection2();
+    goTo(2);
+  } catch(e) {
+    hideLoading();
+    err.textContent = 'Extraction failed: ' + e.message;
+  }
+}
+
+function toBase64(file) {
+  return new Promise((res,rej) => { const r=new FileReader(); r.onload=e=>res(e.target.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); });
+}
+
+// ── Claude API ────────────────────────────────────────────────────────────
+async function callClaude(b64) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': S.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-5',
+      max_tokens:1000,
+      messages:[{
+        role:'user',
+        content:[
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
+          {type:'text',text:`Extract client data from this Trail Statement of Position. Return ONLY a single valid JSON object, no markdown, no explanation, no trailing commas.\n\nUse exactly this structure:\n{"applicants":[{"firstName":"","lastName":"","preferredName":"","email":"","phone":"","dob":"","occupation":"","employer":"","employmentType":"","address":""}],"financial":{"monthlyNetIncome":"","monthlyRentalIncome":"","totalMonthlyExpenses":"","totalAssets":"","totalLiabilities":"","netWorth":"","mortgageCount":0,"creditCardCount":0},"isSelfEmployed":false,"hasTrust":false,"hasRentalProperties":false,"rentalPropertyCount":0}\n\nRules: one object per applicant; employmentType is "Self Employed" or "Employed (Wages)" or "Employed (Salary)"; isSelfEmployed true if ANY applicant self-employed; hasTrust true if trust mentioned; rentalPropertyCount is an integer; mortgageCount and creditCardCount are integers; all strings must be safe JSON.`}
+        ]
+      }]
+    })
+  });
+  if(!resp.ok) {
+    const errBody = await resp.text();
+    let msg = 'API '+resp.status;
+    try { const j = JSON.parse(errBody); msg = j.error?.message || msg; } catch(e){}
+    throw new Error(msg);
+  }
+  const d = await resp.json();
+  const raw = d.content.find(b=>b.type==='text')?.text||'';
+  const m = raw.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error('No JSON in response');
+  const clean = m[0].replace(/,\s*}/g,'}').replace(/,\s*]/g,']').trim();
+  try { return JSON.parse(clean); } catch(e) { throw new Error('Could not parse response — please try again'); }
+}
+
+// ── Section 2 ─────────────────────────────────────────────────────────────
+const AV_COLORS = ['av-pink','av-blue','av-teal'];
+
+function renderSection2() {
+  const d = S.data;
+  document.getElementById('applTabs').innerHTML = d.applicants.map((a,i)=>
+    `<div class="appl-tab ${i===0?'active':''}" onclick="switchApplicant(${i})" id="atab${i}">${a.firstName} ${a.lastName}</div>`
+  ).join('');
+  showApplicant(0);
+  const f = d.financial;
+  document.getElementById('finData').innerHTML = `
+    <div class="data-grid">
+      <div class="dc"><div class="dc-label">Monthly Net Income</div><div class="dc-value green">${f.monthlyNetIncome||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Monthly Rental Income</div><div class="dc-value">${f.monthlyRentalIncome||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Total Monthly Expenses</div><div class="dc-value">${f.totalMonthlyExpenses||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Net Worth</div><div class="dc-value accent">${f.netWorth||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Total Assets</div><div class="dc-value">${f.totalAssets||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Total Liabilities</div><div class="dc-value">${f.totalLiabilities||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Existing Mortgages</div><div class="dc-value">${f.mortgageCount||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Credit Cards</div><div class="dc-value">${f.creditCardCount||'—'}</div></div>
+    </div>`;
+  const flags = [];
+  if(d.isSelfEmployed) flags.push('Self Employed');
+  if(d.hasTrust) flags.push('Trust Structure');
+  if(d.hasRentalProperties) flags.push(d.rentalPropertyCount+' Rental Properties');
+  document.getElementById('flagsRow').innerHTML = flags.map(t=>`<div class="flag-tag">● ${t}</div>`).join('');
+}
+
+function switchApplicant(i) {
+  S.currentApplicant = i;
+  document.querySelectorAll('.appl-tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));
+  showApplicant(i);
+}
+
+function showApplicant(i) {
+  const a = S.data.applicants[i];
+  const init = (a.firstName[0]||'')+(a.lastName[0]||'');
+  document.getElementById('applData').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div class="av ${AV_COLORS[i%AV_COLORS.length]}" style="width:40px;height:40px;font-size:15px;">${init}</div>
+      <div>
+        <div style="font-weight:600;font-size:14px;">${a.firstName} ${a.lastName}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${a.occupation||''} · ${a.employer||''}</div>
+      </div>
+    </div>
+    <div class="data-grid">
+      <div class="dc"><div class="dc-label">Email</div><div class="dc-value">${a.email||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Phone</div><div class="dc-value">${a.phone||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Date of Birth</div><div class="dc-value">${a.dob||'—'}</div></div>
+      <div class="dc"><div class="dc-label">Employment Type</div><div class="dc-value">${a.employmentType||'—'}</div></div>
+      <div class="dc full"><div class="dc-label">Address</div><div class="dc-value">${a.address||'—'}</div></div>
+    </div>`;
+}
+
+// ── Documents ─────────────────────────────────────────────────────────────
+function getDocs() {
+  const d = S.data; const mt = S.mortgageType; const list = [];
+  const add = (sec,name,desc,req,id) => list.push({sec,name,desc,req,id});
+  add('Identity','Proof of Identity','Passport or Driver\'s Licence — certified copy',true,'id_doc');
+  add('Identity','Proof of Address','Utility bill or bank statement within 3 months',true,'proof_addr');
+  if(d.isSelfEmployed) {
+    add('Income — Self Employed','Financial Statements (Last 2 Years)','Full business financials signed by accountant',true,'fin_stmts');
+    add('Income — Self Employed','Personal Tax Returns — IR3 (Last 2 Years)','Filed with Inland Revenue',true,'ir3');
+    add('Income — Self Employed','Business Tax Returns (Last 2 Years)','Company or partnership returns',true,'biz_tax');
+    add('Income — Self Employed','Business Bank Statements (Last 3 Months)','Main operating account',true,'biz_bank');
+    add('Income — Self Employed','Accountant Confirmation Letter','Confirming ongoing trading and income',false,'acct_letter');
+  }
+  if(d.applicants.some(a=>a.employmentType?.toLowerCase().includes('wage')||a.employmentType?.toLowerCase().includes('salary'))) {
+    add('Income — Employed','Last 3 Months Payslips','For each PAYE applicant',true,'payslips');
+    add('Income — Employed','Employment Contract or Letter','Confirming permanent status and salary',false,'emp_contract');
+  }
+  add('Bank Statements','Personal Bank Statements (Last 3 Months)','All main accounts including savings',true,'pers_bank');
+  add('Bank Statements','Statements for Living Expense Accounts','Any account regular expenses come from',true,'living_bank');
+  if(mt==='residential_purchase') {
+    add('Property — Purchase','Sale & Purchase Agreement','Signed copy including all conditions',true,'spa');
+    add('Property — Purchase','Evidence of Deposit','Bank statement or KiwiSaver balance showing deposit',true,'deposit');
+    add('Property — Purchase','KiwiSaver First Home Withdrawal Letter','If using KiwiSaver for deposit',false,'ks_withdraw');
+    add('Property — Purchase','Building Report / LIM Report','If obtained',false,'lim');
+  }
+  if(mt==='remortgage') {
+    add('Property — Remortgage','Current Mortgage Statements (Last 3 Months)','For all mortgages being refinanced',true,'curr_mort');
+    add('Property — Remortgage','Property Rates Notice','Current council rates invoice',true,'rates');
+    add('Property — Remortgage','Recent Valuation or Evidence of Equity','Registered valuation or recent CV',false,'valuation');
+  }
+  if(d.hasTrust) {
+    add('Trust / Company','Trust Deed','Full executed trust deed including variations',true,'trust_deed');
+    add('Trust / Company','Certificate of Title — Trust Properties','For each property held in trust',true,'title');
+    add('Trust / Company','Trust Tax Returns (Last 2 Years)','Filed IR6',true,'trust_tax');
+    add('Trust / Company','Trust Bank Statements (Last 3 Months)','Main trust operating account',false,'trust_bank');
+  }
+  if(d.hasRentalProperties) {
+    add('Rental Properties','Tenancy Agreements','Current signed agreements for all rentals',true,'tenancy');
+    add('Rental Properties','Rental Income Evidence (Last 3 Months)','Rental or property manager statements',true,'rental_inc');
+    add('Rental Properties','Rental Property Insurance Certificates','For all investment properties',false,'rental_ins');
+    if(d.rentalPropertyCount>1) add('Rental Properties','Schedule of Properties','Summary of all rentals, values and mortgages',false,'prop_sched');
+  }
+  add('Existing Liabilities','Statements for All Existing Mortgages','Last statement for each mortgage account',true,'exist_mort');
+  add('Existing Liabilities','Credit Card Statements (Last 3 Months)','For all cards listed in the fact find',true,'cc_stmts');
+  return list;
+}
+
+function buildChecklist() {
+  const docs = getDocs(); const d = S.data;
+  docs.forEach(doc => { if(doc.req) S.checkedDocs.add(doc.id); });
+  const sections = {};
+  docs.forEach(doc => { if(!sections[doc.sec]) sections[doc.sec]=[]; sections[doc.sec].push(doc); });
+  const today = new Date().toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});
+  let html = '';
+  Object.entries(sections).forEach(([sec,items]) => {
+    const sel = items.filter(i=>S.checkedDocs.has(i.id)).length;
+    html += `<div class="doc-section-hdr"><span>${sec}</span><span>${sel}/${items.length}</span></div>`;
+    items.forEach(doc => {
+      const on = S.checkedDocs.has(doc.id);
+      const avatars = d.applicants.map((a,i)=>{
+        const init=(a.firstName[0]||'')+(a.lastName[0]||'');
+        return `<div class="av ${AV_COLORS[i%AV_COLORS.length]}" title="${a.firstName} ${a.lastName}" style="margin-left:-6px;">${init}</div>`;
+      }).join('');
+      const names = d.applicants.map(a=>a.firstName+' '+a.lastName).join(', ');
+      html += `<div class="doc-row ${on?'':'off'}" id="row_${doc.id}" onclick="toggleDoc('${doc.id}')">
+        <div class="doc-file-icon">${on?'📄':'○'}</div>
+        <div class="doc-main">
+          <div class="doc-name">${doc.name}</div>
+          <div class="doc-meta"><span>0/0 files</span><span class="meta-dot"></span><span>${today}</span><span class="meta-dot"></span><span>0 comments</span></div>
+        </div>
+        <div class="doc-right">
+          <div style="display:flex;margin-right:2px;">${avatars}</div>
+          <span class="av-name">${names}</span>
+          <span class="sp ${doc.req?'sp-req':'sp-opt'}">${doc.req?'Required':'Optional'}</span>
+          <span style="font-size:14px;color:var(--text-muted);">↺</span>
+          <div class="icon-btn">⋯</div>
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('docList').innerHTML = html;
+  document.getElementById('summaryStrip').innerHTML = `
+    <div class="ss-item"><div class="ss-label">Applicants</div><div class="ss-value">${d.applicants.length}</div></div>
+    <div class="ss-item"><div class="ss-label">Type</div><div class="ss-value" style="font-size:13px;">${S.mortgageType==='remortgage'?'Remortgage':'Purchase'}</div></div>
+    <div class="ss-item"><div class="ss-label">Self Employed</div><div class="ss-value" style="font-size:13px;">${d.isSelfEmployed?'Yes':'No'}</div></div>
+    <div class="ss-item"><div class="ss-label">Trust</div><div class="ss-value" style="font-size:13px;">${d.hasTrust?'Yes':'No'}</div></div>
+    <div class="ss-item"><div class="ss-label">Rentals</div><div class="ss-value pink">${d.rentalPropertyCount||0}</div></div>`;
+  updateCount();
+}
+
+function toggleDoc(id) {
+  if(S.checkedDocs.has(id)) {
+    S.checkedDocs.delete(id);
+    const row = document.getElementById('row_'+id);
+    if(row){ row.classList.add('off'); row.querySelector('.doc-file-icon').textContent='○'; }
+  } else {
+    S.checkedDocs.add(id);
+    const row = document.getElementById('row_'+id);
+    if(row){ row.classList.remove('off'); row.querySelector('.doc-file-icon').textContent='📄'; }
+  }
+  updateCount(); buildChecklistHeaders();
+}
+
+function buildChecklistHeaders() {
+  const docs = getDocs(); const sections = {};
+  docs.forEach(doc => { if(!sections[doc.sec]) sections[doc.sec]=[]; sections[doc.sec].push(doc); });
+  Object.entries(sections).forEach(([sec,items]) => {
+    const sel = items.filter(i=>S.checkedDocs.has(i.id)).length;
+    document.querySelectorAll('.doc-section-hdr').forEach(h => {
+      if(h.querySelector('span')?.textContent===sec) h.querySelector('span:last-child').textContent=`${sel}/${items.length}`;
+    });
+  });
+}
+
+function updateCount() {
+  const el = document.getElementById('docCountLabel');
+  if(el) el.textContent = S.checkedDocs.size+' selected';
+}
+
+// ── Review ────────────────────────────────────────────────────────────────
+function buildReview() {
+  const d = S.data;
+  const docs = getDocs().filter(doc=>S.checkedDocs.has(doc.id));
+  const applRows = d.applicants.map((a,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-light);">
+      <div class="av ${AV_COLORS[i%AV_COLORS.length]}" style="width:36px;height:36px;font-size:13px;">${(a.firstName[0]||'')+(a.lastName[0]||'')}</div>
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:13px;">${a.firstName} ${a.lastName}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${a.email} · ${a.phone}</div>
+      </div>
+      <span class="sp sp-requested">${a.employmentType||'—'}</span>
+    </div>`).join('');
+  document.getElementById('finalReview').innerHTML = `
+    <div class="review-block"><div class="review-block-title">Applicants</div>${applRows}</div>
+    <div class="review-block" style="margin-top:16px;">
+      <div class="review-block-title">${docs.length} Documents to Request</div>
+      <div class="doc-pills">${docs.map(d=>`<span class="doc-pill">${d.name}</span>`).join('')}</div>
+    </div>
+    <div class="review-block" style="margin-top:16px;">
+      <div class="data-grid">
+        <div class="dc"><div class="dc-label">Mortgage Type</div><div class="dc-value">${S.mortgageType==='remortgage'?'Remortgage':'Residential Purchase'}</div></div>
+        <div class="dc"><div class="dc-label">Due Date</div><div class="dc-value">${new Date(Date.now()+7*86400000).toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'})}</div></div>
+      </div>
+    </div>`;
+}
+
+// ── Send to Content Snare ─────────────────────────────────────────────────
+async function sendToContentSnare() {
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  showLoading('Sending to Content Snare...', 'Creating clients and document request');
+
+  const d = S.data;
+  const docs = getDocs().filter(doc=>S.checkedDocs.has(doc.id));
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + S.csToken
+  };
+
+  try {
+    // 1. Create or find a client for each applicant
+    const clientIds = [];
+    for (const a of d.applicants) {
+      const cr = await fetch(CS_API + '/clients', {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          name: a.firstName + ' ' + a.lastName,
+          email: a.email,
+          phone: a.phone || undefined
+        })
+      });
+      if (!cr.ok) throw new Error('Failed to create client: ' + cr.status + ' ' + await cr.text());
+      const cd = await cr.json();
+      clientIds.push(cd.id);
+    }
+
+    // 2. Build sections from selected docs
+    const secMap = {};
+    docs.forEach(doc => {
+      if(!secMap[doc.sec]) secMap[doc.sec] = [];
+      secMap[doc.sec].push({ name: doc.name, description: doc.desc });
+    });
+
+    // 3. Create the document request
+    const reqName = `${d.applicants.map(a=>a.firstName).join(' & ')} — ${S.mortgageType==='remortgage'?'Remortgage':'Purchase'} — Document Request`;
+    const rr = await fetch(CS_API + '/requests', {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        name: reqName,
+        client_ids: clientIds,
+        due_date: new Date(Date.now()+7*86400000).toISOString().split('T')[0],
+        sections: Object.entries(secMap).map(([title, items]) => ({
+          title,
+          fields: items.map(i => ({ label: i.name, description: i.description, type: 'file' }))
+        }))
+      })
+    });
+    if (!rr.ok) throw new Error('Failed to create request: ' + rr.status + ' ' + await rr.text());
+    const rd = await rr.json();
+
+    hideLoading();
+    const rc = document.getElementById('resultCard');
+    rc.style.display = 'block';
+    document.getElementById('resultContent').innerHTML = `
+      <div class="alert alert-success">✅ <strong>Sent successfully!</strong> — ${docs.length} documents requested across ${Object.keys(secMap).length} sections.</div>
+      <div style="margin-top:16px;">
+        <div class="data-grid">
+          <div class="dc"><div class="dc-label">Client(s)</div><div class="dc-value">${d.applicants.map(a=>a.firstName+' '+a.lastName).join(', ')}</div></div>
+          <div class="dc"><div class="dc-label">Documents</div><div class="dc-value accent">${docs.length} items</div></div>
+          <div class="dc full"><div class="dc-label">Request Name</div><div class="dc-value">${reqName}</div></div>
+          ${rd.id ? `<div class="dc full"><div class="dc-label">Content Snare Request ID</div><div class="dc-value" style="font-family:monospace;font-size:12px;">${rd.id}</div></div>` : ''}
+        </div>
+      </div>
+      <div class="alert alert-info" style="margin-top:14px;">
+        <span>ℹ️</span>
+        <div>Check your <strong>Content Snare Requests</strong> tab — the client portal link will be there ready to send to ${d.applicants.map(a=>a.firstName).join(' & ')}.</div>
+      </div>`;
+
+    btn.textContent = '✓ Sent';
+    rc.scrollIntoView({behavior:'smooth'});
+
+  } catch(e) {
+    hideLoading();
+    btn.disabled = false; btn.textContent = 'Send to Content Snare →';
+    const rc = document.getElementById('resultCard');
+    rc.style.display = 'block';
+    document.getElementById('resultContent').innerHTML = `<div class="alert alert-error">❌ <strong>Error:</strong> ${e.message}</div>`;
+  }
+}
+
+function showLoading(t,s) { document.getElementById('loadingText').textContent=t; document.getElementById('loadingSub').textContent=s; document.getElementById('loadingOverlay').classList.add('active'); }
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
+</script>
+</body>
+</html>
