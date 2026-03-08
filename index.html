@@ -208,48 +208,431 @@ label { display:block;font-size:.875rem;font-weight:500;margin-bottom:6px; } .la
 <div class="overlay" id="loadingOverlay"><div class="overlay-box"><div class="spinner"></div><div style="font-weight:600;" id="loadingText">Loading…</div><div style="font-size:.8125rem;color:var(--muted-foreground);margin-top:4px;" id="loadingSub"></div></div></div>
 
 <script>
-const XANO_BASE='https://xxgk-ehxz-nx2m.a2.xano.io/api:WEOgB9UF';
-const XANO_LOGIN='https://api.total.nz/api:Vg3BByKf/auth/login',XANO_EXTRACT=XANO_BASE+'/portal/extract-pdf',XANO_SETTINGS_GET=XANO_BASE+'/portal/settings',XANO_SETTINGS_POST=XANO_BASE+'/portal/settings';
-const CS_AUTH_URL='https://api.contentsnare.com/oauth/authorization',CS_TOKEN_URL='https://api.contentsnare.com/oauth/token',CS_API='https://api.contentsnare.com/partner_api/v1';
-const CS_REDIRECT_URI=window.location.origin+window.location.pathname;
-const S={authToken:sessionStorage.getItem('auth_token')||null,csToken:sessionStorage.getItem('cs_token')||null,pdfFile:null,mortgageType:'residential_purchase',data:null,checkedDocs:new Set(),currentApplicant:0,csClientId:null,csClientSecret:null};
-const AV_COLORS=['av-zinc','av-blue','av-violet','av-rose'];
-window.addEventListener('load',async()=>{const p=new URLSearchParams(window.location.search),code=p.get('code');if(code){history.replaceState({},'',window.location.pathname);if(S.authToken){showApp();goTo(4);await exchangeCodeForToken(code);return;}}if(S.authToken){showApp();await loadSettings();}});
-function showApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('appShell').classList.remove('hidden');if(S.csToken)updateCsNavPill(true);const n=localStorage.getItem('advisor_name');if(n)document.getElementById('settingsAdvisorName').value=n;const d=localStorage.getItem('due_days');if(d)document.getElementById('settingsDefaultDueDays').value=d;}
-async function doLogin(){const email=document.getElementById('loginEmail').value.trim(),pass=document.getElementById('loginPassword').value,err=document.getElementById('loginError');err.classList.add('hidden');if(!email||!pass){err.textContent='Please enter your email and password.';err.classList.remove('hidden');return;}showLoading('Signing in…','');try{const resp=await fetch(XANO_LOGIN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});if(!resp.ok)throw new Error();const d=await resp.json();const token=d.authToken||d.auth_token||d.token;if(!token)throw new Error();sessionStorage.setItem('auth_token',token);S.authToken=token;hideLoading();showApp();await loadSettings();}catch(e){hideLoading();err.textContent='Invalid email or password.';err.classList.remove('hidden');}}
-function doLogout(){sessionStorage.clear();location.reload();}
-function authHeaders(){return{'Content-Type':'application/json','Authorization':'Bearer '+S.authToken};}
-async function loadSettings(){try{const r=await fetch(XANO_SETTINGS_GET,{headers:authHeaders()});if(!r.ok)return;const d=await r.json();if(d.cs_client_id){S.csClientId=d.cs_client_id;document.getElementById('settingsCsClientId').value=d.cs_client_id;}if(d.cs_client_secret)S.csClientSecret=d.cs_client_secret;setStatusBadge('anthropicStatus',!!d.has_anthropic_key,'Configured ✓','Not configured');setStatusBadge('csConfigStatus',!!(d.cs_client_id&&d.cs_client_secret),'Configured ✓','Not configured');}catch(e){console.warn('Settings load failed',e);}}
-function setStatusBadge(id,ok,yes,no){const el=document.getElementById(id);if(!el)return;el.textContent=ok?yes:no;el.className='badge '+(ok?'badge-green':'badge-outline');}
-function showSettings(){document.getElementById('mainPortal').classList.add('hidden');document.getElementById('settingsPanel').classList.remove('hidden');document.getElementById('navPageTitle').textContent='Settings';loadSettings();}
-function hideSettings(){document.getElementById('settingsPanel').classList.add('hidden');document.getElementById('mainPortal').classList.remove('hidden');document.getElementById('navPageTitle').textContent='Document Portal';}
-function showSettingsTab(tab,el){document.querySelectorAll('[id^="settingsTab-"]').forEach(e=>e.classList.add('hidden'));document.getElementById('settingsTab-'+tab).classList.remove('hidden');document.querySelectorAll('.settings-nav-item').forEach(e=>e.classList.remove('active'));if(el)el.classList.add('active');}
-async function saveAnthropicKey(){const key=document.getElementById('settingsAnthropicKey').value.trim();if(!key)return;const msg=document.getElementById('anthropicSaveMsg');try{const r=await fetch(XANO_SETTINGS_POST,{method:'POST',headers:authHeaders(),body:JSON.stringify({anthropic_api_key:key})});if(!r.ok)throw new Error();document.getElementById('settingsAnthropicKey').value='';setStatusBadge('anthropicStatus',true,'Configured ✓','');showMsg(msg,'Saved successfully');}catch(e){showMsg(msg,'Save failed — try again');}}
-async function saveCsCredentials(){const id=document.getElementById('settingsCsClientId').value.trim(),secret=document.getElementById('settingsCsClientSecret').value.trim();if(!id&&!secret)return;const msg=document.getElementById('csSaveMsg');try{const body={};if(id)body.cs_client_id=id;if(secret)body.cs_client_secret=secret;const r=await fetch(XANO_SETTINGS_POST,{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});if(!r.ok)throw new Error();if(id)S.csClientId=id;if(secret)S.csClientSecret=secret;setStatusBadge('csConfigStatus',true,'Configured ✓','');showMsg(msg,'Saved successfully');}catch(e){showMsg(msg,'Save failed — try again');}}
-function saveProfile(){localStorage.setItem('advisor_name',document.getElementById('settingsAdvisorName').value.trim());localStorage.setItem('due_days',document.getElementById('settingsDefaultDueDays').value.trim()||'7');showMsg(document.getElementById('profileSaveMsg'),'Saved successfully');}
-function showMsg(el,txt){el.textContent=txt;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),3000);}
-async function exchangeCodeForToken(code){if(!S.csClientId||!S.csClientSecret)await loadSettings();showLoading('Connecting…','Exchanging authorisation code with Content Snare');try{const r=await fetch(CS_TOKEN_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:S.csClientId,client_secret:S.csClientSecret,redirect_uri:CS_REDIRECT_URI,code})});if(!r.ok)throw new Error('Token exchange failed: '+r.status);const d=await r.json();sessionStorage.setItem('cs_token',d.access_token);setConnected(d.access_token);hideLoading();}catch(e){hideLoading();alert('Content Snare connection failed: '+e.message);}}
-function setConnected(token){S.csToken=token;document.getElementById('authNeeded').classList.add('hidden');document.getElementById('authDone').classList.remove('hidden');document.getElementById('sendBtn').disabled=false;updateCsNavPill(true);}
-function updateCsNavPill(connected){const p=document.getElementById('csStatusPill');p.classList.remove('hidden');p.className='badge '+(connected?'badge-green':'badge-outline');p.textContent=connected?'✓ Content Snare':'Content Snare';}
-function startOAuth(){if(!S.csClientId){alert('Please configure your Content Snare credentials in Settings first.');return;}window.location.href=CS_AUTH_URL+'?client_id='+encodeURIComponent(S.csClientId)+'&redirect_uri='+encodeURIComponent(CS_REDIRECT_URI)+'&response_type=code';}
-function goTo(n){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active');['si1','si2','si3','si4'].forEach((id,i)=>{const el=document.getElementById(id);el.classList.remove('active','done');if(i+1<n)el.classList.add('done');else if(i+1===n)el.classList.add('active');});['sc1','sc2','sc3'].forEach((id,i)=>document.getElementById(id).classList.toggle('done',i+1<n));if(n===3)buildChecklist();if(n===4)buildReview();window.scrollTo({top:0,behavior:'smooth'});}
-const zone=document.getElementById('uploadZone'),inp=document.getElementById('pdfInput');
-zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0]);});inp.addEventListener('change',e=>{if(e.target.files[0])setFile(e.target.files[0]);});
-function setFile(f){if(f.type!=='application/pdf'){document.getElementById('fileStatus').innerHTML='<div class="alert alert-destructive mt-3">Please upload a PDF file.</div>';return;}S.pdfFile=f;document.getElementById('fileStatus').innerHTML='<div class="alert alert-green mt-3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg><span><strong>'+f.name+'</strong> — '+(f.size/1024).toFixed(0)+' KB</span></div>';zone.style.borderColor='var(--green)';zone.style.background='var(--green-light)';}
-async function startExtraction(){const err=document.getElementById('step1Error');err.textContent='';if(!S.pdfFile){err.textContent='Please upload a Trail PDF first.';return;}S.mortgageType=document.getElementById('mortgageType').value;showLoading('Reading PDF…','Extracting client data from Trail Statement of Position');try{const b64=await toBase64(S.pdfFile);const resp=await fetch(XANO_EXTRACT,{method:'POST',headers:authHeaders(),body:JSON.stringify({pdf_base64:b64,mortgage_type:S.mortgageType})});if(!resp.ok)throw new Error('Extraction failed ('+resp.status+'): '+await resp.text());const outer=await resp.json();const raw=outer?.content?.find?.(b=>b.type==='text')?.text||(typeof outer==='string'?outer:JSON.stringify(outer));const m=raw.match(/{[sS]*}/);if(!m)throw new Error('No JSON in response');S.data=JSON.parse(m[0].replace(/,s*}/g,'}').replace(/,s*]/g,']').trim());hideLoading();renderSection2();goTo(2);}catch(e){hideLoading();err.textContent=e.message;}}
-function toBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
-function renderSection2(){const d=S.data;document.getElementById('applTabs').innerHTML=d.applicants.map((a,i)=>'<div class="tab '+(i===0?'active':'')+'" onclick="switchApplicant('+i+',this)">'+a.firstName+' '+a.lastName+'</div>').join('');showApplicant(0);const f=d.financial;document.getElementById('finData').innerHTML='<div class="data-grid"><div class="dc"><div class="dc-label">Monthly Net Income</div><div class="dc-value green">'+(f.monthlyNetIncome||'—')+'</div></div><div class="dc"><div class="dc-label">Monthly Rental Income</div><div class="dc-value">'+(f.monthlyRentalIncome||'—')+'</div></div><div class="dc"><div class="dc-label">Total Monthly Expenses</div><div class="dc-value">'+(f.totalMonthlyExpenses||'—')+'</div></div><div class="dc"><div class="dc-label">Net Worth</div><div class="dc-value blue">'+(f.netWorth||'—')+'</div></div><div class="dc"><div class="dc-label">Total Assets</div><div class="dc-value">'+(f.totalAssets||'—')+'</div></div><div class="dc"><div class="dc-label">Total Liabilities</div><div class="dc-value">'+(f.totalLiabilities||'—')+'</div></div><div class="dc"><div class="dc-label">Existing Mortgages</div><div class="dc-value">'+(f.mortgageCount||'—')+'</div></div><div class="dc"><div class="dc-label">Credit Cards</div><div class="dc-value">'+(f.creditCardCount||'—')+'</div></div></div>';const flags=[];if(d.isSelfEmployed)flags.push(['Self Employed','badge-amber']);if(d.hasTrust)flags.push(['Trust Structure','badge-blue']);if(d.hasRentalProperties)flags.push([d.rentalPropertyCount+' Rental Propert'+(d.rentalPropertyCount===1?'y':'ies'),'badge-secondary']);document.getElementById('flagsRow').innerHTML=flags.length?flags.map(([t,c])=>'<span class="badge '+c+'">'+t+'</span>').join(''):'<span class="text-sm text-muted">No additional flags detected.</span>';}
-function switchApplicant(i,el){document.querySelectorAll('#applTabs .tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');showApplicant(i);}
-function showApplicant(i){const a=S.data.applicants[i];const init=(a.firstName?.[0]||'')+(a.lastName?.[0]||'');document.getElementById('applData').innerHTML='<div class="flex items-center gap-3 mb-4"><div class="av av-lg '+AV_COLORS[i%AV_COLORS.length]+'">'+init+'</div><div style="flex:1;"><div style="font-weight:600;">'+a.firstName+' '+a.lastName+(a.preferredName?' <span class="text-muted" style="font-weight:400;">('+a.preferredName+')</span>':'')+'</div><div class="text-sm text-muted">'+([a.occupation,a.employer].filter(Boolean).join(' · ')||'—')+'</div></div><span class="badge badge-secondary">'+(a.employmentType||'—')+'</span></div><div class="data-grid"><div class="dc"><div class="dc-label">Email</div><div class="dc-value text-sm">'+(a.email||'—')+'</div></div><div class="dc"><div class="dc-label">Phone</div><div class="dc-value text-sm">'+(a.phone||'—')+'</div></div><div class="dc"><div class="dc-label">Date of Birth</div><div class="dc-value text-sm">'+(a.dob||'—')+'</div></div><div class="dc"><div class="dc-label">Employment</div><div class="dc-value text-sm">'+(a.employmentType||'—')+'</div></div><div class="dc full"><div class="dc-label">Address</div><div class="dc-value text-sm">'+(a.address||'—')+'</div></div></div>';}
-function getDocs(){const d=S.data,mt=S.mortgageType,list=[];const add=(sec,name,desc,req,id)=>list.push({sec,name,desc,req,id});add('Identity','Proof of Identity',"Passport or Driver's Licence — certified copy",true,'id_doc');add('Identity','Proof of Address','Utility bill or bank statement within 3 months',true,'proof_addr');if(d.isSelfEmployed){add('Income — Self Employed','Financial Statements (Last 2 Years)','Full business financials signed by accountant',true,'fin_stmts');add('Income — Self Employed','Personal Tax Returns — IR3 (Last 2 Years)','Filed with Inland Revenue',true,'ir3');add('Income — Self Employed','Business Tax Returns (Last 2 Years)','Company or partnership returns',true,'biz_tax');add('Income — Self Employed','Business Bank Statements (Last 3 Months)','Main operating account',true,'biz_bank');add('Income — Self Employed','Accountant Confirmation Letter','Confirming ongoing trading and income',false,'acct_letter');}if(d.applicants.some(a=>a.employmentType?.toLowerCase().includes('wage')||a.employmentType?.toLowerCase().includes('salary'))){add('Income — Employed','Last 3 Months Payslips','For each PAYE applicant',true,'payslips');add('Income — Employed','Employment Contract or Letter','Confirming permanent status and salary',false,'emp_contract');}add('Bank Statements','Personal Bank Statements (Last 3 Months)','All main accounts including savings',true,'pers_bank');add('Bank Statements','Statements for Living Expense Accounts','Any account regular expenses come from',true,'living_bank');if(mt==='residential_purchase'){add('Property — Purchase','Sale & Purchase Agreement','Signed copy including all conditions',true,'spa');add('Property — Purchase','Evidence of Deposit','Bank statement or KiwiSaver balance showing deposit',true,'deposit');add('Property — Purchase','KiwiSaver First Home Withdrawal Letter','If using KiwiSaver for deposit',false,'ks_withdraw');add('Property — Purchase','Building Report / LIM Report','If obtained',false,'lim');}if(mt==='remortgage'){add('Property — Remortgage','Current Mortgage Statements (Last 3 Months)','For all mortgages being refinanced',true,'curr_mort');add('Property — Remortgage','Property Rates Notice','Current council rates invoice',true,'rates');add('Property — Remortgage','Recent Valuation or Evidence of Equity','Registered valuation or recent CV',false,'valuation');}if(d.hasTrust){add('Trust / Company','Trust Deed','Full executed trust deed including variations',true,'trust_deed');add('Trust / Company','Certificate of Title — Trust Properties','For each property held in trust',true,'title');add('Trust / Company','Trust Tax Returns (Last 2 Years)','Filed IR6',true,'trust_tax');add('Trust / Company','Trust Bank Statements (Last 3 Months)','Main trust operating account',false,'trust_bank');}if(d.hasRentalProperties){add('Rental Properties','Tenancy Agreements','Current signed agreements for all rentals',true,'tenancy');add('Rental Properties','Rental Income Evidence (Last 3 Months)','Rental or property manager statements',true,'rental_inc');add('Rental Properties','Rental Property Insurance Certificates','For all investment properties',false,'rental_ins');if(d.rentalPropertyCount>1)add('Rental Properties','Schedule of Properties','Summary of all rentals, values and mortgages',false,'prop_sched');}add('Existing Liabilities','Statements for All Existing Mortgages','Last statement for each mortgage account',true,'exist_mort');add('Existing Liabilities','Credit Card Statements (Last 3 Months)','For all cards listed in the fact find',true,'cc_stmts');return list;}
-function buildChecklist(){const docs=getDocs(),d=S.data;docs.forEach(doc=>{if(doc.req)S.checkedDocs.add(doc.id);});const sections={};docs.forEach(doc=>{if(!sections[doc.sec])sections[doc.sec]=[];sections[doc.sec].push(doc);});let html='';Object.entries(sections).forEach(([sec,items])=>{const sel=items.filter(i=>S.checkedDocs.has(i.id)).length;html+='<div class="section-header" id="sh_'+sec.replace(/W/g,'_')+'"><span>'+sec+'</span><span class="badge badge-secondary">'+sel+'/'+items.length+'</span></div>';items.forEach(doc=>{const on=S.checkedDocs.has(doc.id);const avatars=d.applicants.map((a,i)=>'<div class="av av-sm '+AV_COLORS[i%AV_COLORS.length]+'" title="'+a.firstName+' '+a.lastName+'">'+(a.firstName?.[0]||'')+(a.lastName?.[0]||'')+'</div>').join('');html+='<div class="doc-row '+(on?'':'unchecked')+'" id="row_'+doc.id+'" onclick="toggleDoc(''+doc.id+'')"><div class="doc-check">'+(on?'✓':'')+'</div><div class="doc-main"><div class="doc-name">'+doc.name+'</div><div class="doc-desc">'+doc.desc+'</div></div><div class="doc-right"><div class="av-stack">'+avatars+'</div><span class="badge '+(doc.req?'badge-blue':'badge-outline')+'">'+(doc.req?'Required':'Optional')+'</span></div></div>';});});document.getElementById('docList').innerHTML=html;document.getElementById('summaryStrip').innerHTML='<div class="ss-item"><div class="ss-label">Applicants</div><div class="ss-value">'+d.applicants.length+'</div></div><div class="ss-item"><div class="ss-label">Type</div><div class="ss-value" style="font-size:.875rem;">'+(S.mortgageType==='remortgage'?'Remortgage':'Purchase')+'</div></div><div class="ss-item"><div class="ss-label">Self Employed</div><div class="ss-value" style="font-size:.875rem;">'+(d.isSelfEmployed?'Yes':'No')+'</div></div><div class="ss-item"><div class="ss-label">Trust</div><div class="ss-value" style="font-size:.875rem;">'+(d.hasTrust?'Yes':'No')+'</div></div><div class="ss-item"><div class="ss-label">Rentals</div><div class="ss-value">'+(d.rentalPropertyCount||0)+'</div></div>';updateCount();}
-function toggleDoc(id){const row=document.getElementById('row_'+id);if(S.checkedDocs.has(id)){S.checkedDocs.delete(id);row?.classList.add('unchecked');if(row)row.querySelector('.doc-check').textContent='';}else{S.checkedDocs.add(id);row?.classList.remove('unchecked');if(row)row.querySelector('.doc-check').textContent='✓';}updateCount();updateSectionHeaders();}
-function updateSectionHeaders(){const docs=getDocs(),sections={};docs.forEach(doc=>{if(!sections[doc.sec])sections[doc.sec]=[];sections[doc.sec].push(doc);});Object.entries(sections).forEach(([sec,items])=>{const el=document.getElementById('sh_'+sec.replace(/W/g,'_'));if(el)el.querySelector('.badge').textContent=items.filter(i=>S.checkedDocs.has(i.id)).length+'/'+items.length;});}
-function updateCount(){const el=document.getElementById('docCountLabel');if(el)el.textContent=S.checkedDocs.size+' selected';}
-function buildReview(){const d=S.data,docs=getDocs().filter(doc=>S.checkedDocs.has(doc.id)),dueDays=parseInt(localStorage.getItem('due_days')||'7'),dueDate=new Date(Date.now()+dueDays*86400000).toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});document.getElementById('finalReview').innerHTML='<div style="margin-bottom:1rem;"><div class="text-sm text-muted font-semibold mb-3" style="text-transform:uppercase;letter-spacing:.05em;">Applicants</div>'+d.applicants.map((a,i)=>'<div class="flex items-center gap-3" style="padding:.625rem 0;border-bottom:1px solid var(--border);"><div class="av '+AV_COLORS[i%AV_COLORS.length]+'">'+(a.firstName?.[0]||'')+(a.lastName?.[0]||'')+'</div><div style="flex:1;"><div style="font-weight:600;font-size:.875rem;">'+a.firstName+' '+a.lastName+'</div><div class="text-sm text-muted">'+([a.email,a.phone].filter(Boolean).join(' · ')||'—')+'</div></div><span class="badge badge-secondary">'+(a.employmentType||'—')+'</span></div>').join('')+'</div><div class="data-grid mb-4"><div class="dc"><div class="dc-label">Mortgage Type</div><div class="dc-value">'+(S.mortgageType==='remortgage'?'Remortgage':'Residential Purchase')+'</div></div><div class="dc"><div class="dc-label">Due Date</div><div class="dc-value">'+dueDate+'</div></div><div class="dc"><div class="dc-label">Documents</div><div class="dc-value blue">'+docs.length+' items</div></div><div class="dc"><div class="dc-label">Sections</div><div class="dc-value">'+(new Set(docs.map(d=>d.sec))).size+'</div></div></div><div><div class="text-sm text-muted font-semibold mb-3" style="text-transform:uppercase;letter-spacing:.05em;">Documents to Request</div><div style="display:flex;flex-wrap:wrap;">'+docs.map(d=>'<span class="doc-pill">'+d.name+'</span>').join('')+'</div></div>';if(S.csToken)setConnected(S.csToken);}
-async function sendToContentSnare(){const btn=document.getElementById('sendBtn');btn.disabled=true;btn.innerHTML='<div class="spinner" style="width:16px;height:16px;margin:0;border-width:2px;"></div> Sending…';showLoading('Sending to Content Snare…','Creating clients and document request');const d=S.data,docs=getDocs().filter(doc=>S.checkedDocs.has(doc.id)),headers={'Content-Type':'application/json','Authorization':'Bearer '+S.csToken},dueDays=parseInt(localStorage.getItem('due_days')||'7');try{const clientIds=[];for(const a of d.applicants){const cr=await fetch(CS_API+'/clients',{method:'POST',headers,body:JSON.stringify({name:a.firstName+' '+a.lastName,email:a.email,phone:a.phone||undefined})});if(!cr.ok)throw new Error('Failed to create client: '+cr.status+' '+await cr.text());clientIds.push((await cr.json()).id);}const secMap={};docs.forEach(doc=>{if(!secMap[doc.sec])secMap[doc.sec]=[];secMap[doc.sec].push({name:doc.name,description:doc.desc});});const reqName=d.applicants.map(a=>a.firstName).join(' & ')+' — '+(S.mortgageType==='remortgage'?'Remortgage':'Purchase')+' — Document Request';const rr=await fetch(CS_API+'/requests',{method:'POST',headers,body:JSON.stringify({name:reqName,client_ids:clientIds,due_date:new Date(Date.now()+dueDays*86400000).toISOString().split('T')[0],sections:Object.entries(secMap).map(([title,items])=>({title,fields:items.map(i=>({label:i.name,description:i.description,type:'file'}))}))})});if(!rr.ok)throw new Error('Failed to create request: '+rr.status+' '+await rr.text());const rd=await rr.json();hideLoading();const rc=document.getElementById('resultCard');rc.classList.remove('hidden');document.getElementById('resultContent').innerHTML='<div class="alert alert-green mb-4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Sent successfully!</strong> — '+docs.length+' documents requested across '+Object.keys(secMap).length+' sections.</div></div><div class="data-grid"><div class="dc"><div class="dc-label">Client(s)</div><div class="dc-value text-sm">'+d.applicants.map(a=>a.firstName+' '+a.lastName).join(', ')+'</div></div><div class="dc"><div class="dc-label">Documents</div><div class="dc-value blue">'+docs.length+' items</div></div><div class="dc full"><div class="dc-label">Request Name</div><div class="dc-value text-sm">'+reqName+'</div></div>'+(rd.id?'<div class="dc full"><div class="dc-label">Request ID</div><div class="dc-value" style="font-family:monospace;font-size:.8125rem;">'+rd.id+'</div></div>':'')+'</div>';btn.innerHTML='✓ Sent';rc.scrollIntoView({behavior:'smooth'});}catch(e){hideLoading();btn.disabled=false;btn.innerHTML='Send to Content Snare <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';const rc=document.getElementById('resultCard');rc.classList.remove('hidden');document.getElementById('resultContent').innerHTML='<div class="alert alert-destructive"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div><strong>Error:</strong> '+e.message+'</div></div>';}}
-function showLoading(t,s){document.getElementById('loadingText').textContent=t;document.getElementById('loadingSub').textContent=s;document.getElementById('loadingOverlay').classList.add('active');}
-function hideLoading(){document.getElementById('loadingOverlay').classList.remove('active');}
+// -- CONFIG --
+const XANO_BASE          = 'https://xxgk-ehxz-nx2m.a2.xano.io/api:WEOgB9UF';
+const XANO_LOGIN         = 'https://api.total.nz/api:Vg3BByKf/auth/login';
+const XANO_EXTRACT       = XANO_BASE + '/portal/extract-pdf';
+const XANO_SETTINGS_GET  = XANO_BASE + '/portal/settings';
+const XANO_SETTINGS_POST = XANO_BASE + '/portal/settings';
+
+const CS_AUTH_URL    = 'https://api.contentsnare.com/oauth/authorization';
+const CS_TOKEN_URL   = 'https://api.contentsnare.com/oauth/token';
+const CS_API         = 'https://api.contentsnare.com/partner_api/v1';
+const CS_REDIRECT_URI = window.location.origin + window.location.pathname;
+
+// -- State --
+const S = {
+  authToken: sessionStorage.getItem('auth_token') || null,
+  csToken:   sessionStorage.getItem('cs_token')   || null,
+  pdfFile: null, mortgageType: 'residential_purchase',
+  data: null, checkedDocs: new Set(), currentApplicant: 0,
+  csClientId: null, csClientSecret: null
+};
+const AV_COLORS = ['av-zinc','av-blue','av-violet','av-rose'];
+
+// -- Boot --
+window.addEventListener('load', async () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) {
+    history.replaceState({}, '', window.location.pathname);
+    if (S.authToken) { showApp(); goTo(4); await exchangeCodeForToken(code); return; }
+  }
+  if (S.authToken) { showApp(); await loadSettings(); }
+});
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').classList.remove('hidden');
+  if (S.csToken) updateCsNavPill(true);
+  const name = localStorage.getItem('advisor_name');
+  if (name) document.getElementById('settingsAdvisorName').value = name;
+  const days = localStorage.getItem('due_days');
+  if (days) document.getElementById('settingsDefaultDueDays').value = days;
+}
+
+// -- Auth --
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  const err   = document.getElementById('loginError');
+  err.classList.add('hidden');
+  if (!email || !pass) { err.textContent = 'Please enter your email and password.'; err.classList.remove('hidden'); return; }
+  showLoading('Signing in...', '');
+  try {
+    const resp = await fetch(XANO_LOGIN, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password:pass}) });
+    if (!resp.ok) throw new Error('Invalid credentials');
+    const d = await resp.json();
+    const token = d.authToken || d.auth_token || d.token;
+    if (!token) throw new Error('No token returned');
+    sessionStorage.setItem('auth_token', token);
+    S.authToken = token;
+    hideLoading(); showApp(); await loadSettings();
+  } catch(e) {
+    hideLoading();
+    err.textContent = 'Invalid email or password.'; err.classList.remove('hidden');
+  }
+}
+function doLogout() { sessionStorage.clear(); location.reload(); }
+function authHeaders() { return { 'Content-Type':'application/json', 'Authorization':'Bearer '+S.authToken }; }
+
+// -- Settings --
+async function loadSettings() {
+  try {
+    const r = await fetch(XANO_SETTINGS_GET, { headers: authHeaders() });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (d.cs_client_id) { S.csClientId = d.cs_client_id; document.getElementById('settingsCsClientId').value = d.cs_client_id; }
+    if (d.cs_client_secret) S.csClientSecret = d.cs_client_secret;
+    setStatusBadge('anthropicStatus', !!d.has_anthropic_key, 'Configured', 'Not configured');
+    setStatusBadge('csConfigStatus', !!(d.cs_client_id && d.cs_client_secret), 'Configured', 'Not configured');
+  } catch(e) { console.warn('Settings load failed', e); }
+}
+function setStatusBadge(id, ok, yes, no) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = ok ? yes : no;
+  el.className = 'badge ' + (ok ? 'badge-green' : 'badge-outline');
+}
+function showSettings() {
+  document.getElementById('mainPortal').classList.add('hidden');
+  document.getElementById('settingsPanel').classList.remove('hidden');
+  document.getElementById('navPageTitle').textContent = 'Settings';
+  loadSettings();
+}
+function hideSettings() {
+  document.getElementById('settingsPanel').classList.add('hidden');
+  document.getElementById('mainPortal').classList.remove('hidden');
+  document.getElementById('navPageTitle').textContent = 'Document Portal';
+}
+function showSettingsTab(tab, el) {
+  document.querySelectorAll('[id^="settingsTab-"]').forEach(e => e.classList.add('hidden'));
+  document.getElementById('settingsTab-'+tab).classList.remove('hidden');
+  document.querySelectorAll('.settings-nav-item').forEach(e => e.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+async function saveAnthropicKey() {
+  const key = document.getElementById('settingsAnthropicKey').value.trim(); if (!key) return;
+  const msg = document.getElementById('anthropicSaveMsg');
+  try {
+    const r = await fetch(XANO_SETTINGS_POST, { method:'POST', headers:authHeaders(), body:JSON.stringify({anthropic_api_key:key}) });
+    if (!r.ok) throw new Error();
+    document.getElementById('settingsAnthropicKey').value = '';
+    setStatusBadge('anthropicStatus', true, 'Configured', '');
+    showMsg(msg, 'Saved');
+  } catch(e) { showMsg(msg, 'Save failed'); }
+}
+async function saveCsCredentials() {
+  const id = document.getElementById('settingsCsClientId').value.trim();
+  const secret = document.getElementById('settingsCsClientSecret').value.trim();
+  if (!id && !secret) return;
+  const msg = document.getElementById('csSaveMsg');
+  try {
+    const body = {}; if (id) body.cs_client_id = id; if (secret) body.cs_client_secret = secret;
+    const r = await fetch(XANO_SETTINGS_POST, { method:'POST', headers:authHeaders(), body:JSON.stringify(body) });
+    if (!r.ok) throw new Error();
+    if (id) S.csClientId = id; if (secret) S.csClientSecret = secret;
+    setStatusBadge('csConfigStatus', true, 'Configured', '');
+    showMsg(msg, 'Saved');
+  } catch(e) { showMsg(msg, 'Save failed'); }
+}
+function saveProfile() {
+  localStorage.setItem('advisor_name', document.getElementById('settingsAdvisorName').value.trim());
+  localStorage.setItem('due_days', document.getElementById('settingsDefaultDueDays').value.trim() || '7');
+  showMsg(document.getElementById('profileSaveMsg'), 'Saved');
+}
+function showMsg(el, txt) { el.textContent = txt; el.classList.remove('hidden'); setTimeout(() => el.classList.add('hidden'), 3000); }
+
+// -- CS OAuth --
+async function exchangeCodeForToken(code) {
+  if (!S.csClientId || !S.csClientSecret) await loadSettings();
+  showLoading('Connecting...', 'Exchanging authorisation code with Content Snare');
+  try {
+    const r = await fetch(CS_TOKEN_URL, {
+      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({ grant_type:'authorization_code', client_id:S.csClientId, client_secret:S.csClientSecret, redirect_uri:CS_REDIRECT_URI, code })
+    });
+    if (!r.ok) throw new Error('Token exchange failed: '+r.status);
+    const d = await r.json();
+    sessionStorage.setItem('cs_token', d.access_token);
+    setConnected(d.access_token); hideLoading();
+  } catch(e) { hideLoading(); alert('Content Snare connection failed: '+e.message); }
+}
+function setConnected(token) {
+  S.csToken = token;
+  document.getElementById('authNeeded').classList.add('hidden');
+  document.getElementById('authDone').classList.remove('hidden');
+  document.getElementById('sendBtn').disabled = false;
+  updateCsNavPill(true);
+}
+function updateCsNavPill(connected) {
+  const p = document.getElementById('csStatusPill');
+  p.classList.remove('hidden');
+  p.className = 'badge ' + (connected ? 'badge-green' : 'badge-outline');
+  p.textContent = connected ? 'Content Snare connected' : 'Content Snare';
+}
+function startOAuth() {
+  if (!S.csClientId) { alert('Please configure your Content Snare credentials in Settings first.'); return; }
+  window.location.href = CS_AUTH_URL + '?client_id=' + encodeURIComponent(S.csClientId) + '&redirect_uri=' + encodeURIComponent(CS_REDIRECT_URI) + '&response_type=code';
+}
+
+// -- Navigation --
+function goTo(n) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section'+n).classList.add('active');
+  ['si1','si2','si3','si4'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+    if(i+1 < n) el.classList.add('done'); else if(i+1 === n) el.classList.add('active');
+  });
+  ['sc1','sc2','sc3'].forEach((id,i) => document.getElementById(id).classList.toggle('done', i+1 < n));
+  if(n===3) buildChecklist(); if(n===4) buildReview();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// -- Upload --
+const zone = document.getElementById('uploadZone');
+const inp  = document.getElementById('pdfInput');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); if(e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
+inp.addEventListener('change', e => { if(e.target.files[0]) setFile(e.target.files[0]); });
+function setFile(f) {
+  if(f.type !== 'application/pdf') { document.getElementById('fileStatus').innerHTML = '<div class="alert alert-destructive mt-3">Please upload a PDF file.</div>'; return; }
+  S.pdfFile = f;
+  document.getElementById('fileStatus').innerHTML = '<div class="alert alert-green mt-3"><span><strong>'+f.name+'</strong> - '+(f.size/1024).toFixed(0)+' KB</span></div>';
+  zone.style.borderColor = 'var(--green)'; zone.style.background = 'var(--green-light)';
+}
+
+// -- Extraction --
+async function startExtraction() {
+  const err = document.getElementById('step1Error'); err.textContent = '';
+  if(!S.pdfFile) { err.textContent = 'Please upload a Trail PDF first.'; return; }
+  S.mortgageType = document.getElementById('mortgageType').value;
+  showLoading('Reading PDF...', 'Extracting client data from Trail Statement of Position');
+  try {
+    const b64 = await toBase64(S.pdfFile);
+    const resp = await fetch(XANO_EXTRACT, { method:'POST', headers:authHeaders(), body:JSON.stringify({pdf_base64:b64, mortgage_type:S.mortgageType}) });
+    if(!resp.ok) throw new Error('Extraction failed ('+resp.status+'): '+await resp.text());
+    const outer = await resp.json();
+    const raw = outer?.content?.find?.(b => b.type==='text')?.text
+             || (typeof outer === 'string' ? outer : JSON.stringify(outer));
+    const m = raw.match(/{[sS]*}/);
+    if(!m) throw new Error('No JSON in response');
+    S.data = JSON.parse(m[0].replace(/,s*}/g,'}').replace(/,s*]/g,']').trim());
+    hideLoading(); renderSection2(); goTo(2);
+  } catch(e) { hideLoading(); err.textContent = e.message; }
+}
+function toBase64(file) { return new Promise((res,rej) => { const r=new FileReader(); r.onload=e=>res(e.target.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); }); }
+
+// -- Section 2 --
+function renderSection2() {
+  const d = S.data;
+  document.getElementById('applTabs').innerHTML = d.applicants.map((a,i) => '<div class="tab '+(i===0?'active':'')+'" onclick="switchApplicant('+i+',this)">'+a.firstName+' '+a.lastName+'</div>').join('');
+  showApplicant(0);
+  const f = d.financial;
+  document.getElementById('finData').innerHTML = '<div class="data-grid">'
+    +'<div class="dc"><div class="dc-label">Monthly Net Income</div><div class="dc-value green">'+(f.monthlyNetIncome||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Monthly Rental Income</div><div class="dc-value">'+(f.monthlyRentalIncome||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Total Monthly Expenses</div><div class="dc-value">'+(f.totalMonthlyExpenses||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Net Worth</div><div class="dc-value blue">'+(f.netWorth||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Total Assets</div><div class="dc-value">'+(f.totalAssets||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Total Liabilities</div><div class="dc-value">'+(f.totalLiabilities||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Existing Mortgages</div><div class="dc-value">'+(f.mortgageCount||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Credit Cards</div><div class="dc-value">'+(f.creditCardCount||'-')+'</div></div>'
+    +'</div>';
+  const flags = [];
+  if(d.isSelfEmployed) flags.push(['Self Employed','badge-amber']);
+  if(d.hasTrust) flags.push(['Trust Structure','badge-blue']);
+  if(d.hasRentalProperties) flags.push([d.rentalPropertyCount+' Rental Propert'+(d.rentalPropertyCount===1?'y':'ies'),'badge-secondary']);
+  document.getElementById('flagsRow').innerHTML = flags.length ? flags.map(([t,c])=>'<span class="badge '+c+'">'+t+'</span>').join('') : '<span class="text-sm text-muted">No additional flags detected.</span>';
+}
+function switchApplicant(i, el) {
+  document.querySelectorAll('#applTabs .tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  showApplicant(i);
+}
+function showApplicant(i) {
+  const a = S.data.applicants[i];
+  const init = (a.firstName?.[0]||'')+(a.lastName?.[0]||'');
+  document.getElementById('applData').innerHTML =
+    '<div class="flex items-center gap-3 mb-4">'
+    +'<div class="av av-lg '+AV_COLORS[i%AV_COLORS.length]+'">'+init+'</div>'
+    +'<div style="flex:1;"><div style="font-weight:600;">'+a.firstName+' '+a.lastName+(a.preferredName?' ('+a.preferredName+')':'')+'</div>'
+    +'<div class="text-sm text-muted">'+([a.occupation,a.employer].filter(Boolean).join(' - ')||'-')+'</div></div>'
+    +'<span class="badge badge-secondary">'+(a.employmentType||'-')+'</span></div>'
+    +'<div class="data-grid">'
+    +'<div class="dc"><div class="dc-label">Email</div><div class="dc-value text-sm">'+(a.email||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Phone</div><div class="dc-value text-sm">'+(a.phone||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Date of Birth</div><div class="dc-value text-sm">'+(a.dob||'-')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Employment</div><div class="dc-value text-sm">'+(a.employmentType||'-')+'</div></div>'
+    +'<div class="dc full"><div class="dc-label">Address</div><div class="dc-value text-sm">'+(a.address||'-')+'</div></div>'
+    +'</div>';
+}
+
+// -- Documents --
+function getDocs() {
+  const d = S.data; const mt = S.mortgageType; const list = [];
+  const add = (sec,name,desc,req,id) => list.push({sec,name,desc,req,id});
+  add('Identity','Proof of Identity',"Passport or Driver's Licence - certified copy",true,'id_doc');
+  add('Identity','Proof of Address','Utility bill or bank statement within 3 months',true,'proof_addr');
+  if(d.isSelfEmployed) {
+    add('Income - Self Employed','Financial Statements (Last 2 Years)','Full business financials signed by accountant',true,'fin_stmts');
+    add('Income - Self Employed','Personal Tax Returns - IR3 (Last 2 Years)','Filed with Inland Revenue',true,'ir3');
+    add('Income - Self Employed','Business Tax Returns (Last 2 Years)','Company or partnership returns',true,'biz_tax');
+    add('Income - Self Employed','Business Bank Statements (Last 3 Months)','Main operating account',true,'biz_bank');
+    add('Income - Self Employed','Accountant Confirmation Letter','Confirming ongoing trading and income',false,'acct_letter');
+  }
+  if(d.applicants.some(a=>a.employmentType?.toLowerCase().includes('wage')||a.employmentType?.toLowerCase().includes('salary'))) {
+    add('Income - Employed','Last 3 Months Payslips','For each PAYE applicant',true,'payslips');
+    add('Income - Employed','Employment Contract or Letter','Confirming permanent status and salary',false,'emp_contract');
+  }
+  add('Bank Statements','Personal Bank Statements (Last 3 Months)','All main accounts including savings',true,'pers_bank');
+  add('Bank Statements','Statements for Living Expense Accounts','Any account regular expenses come from',true,'living_bank');
+  if(mt==='residential_purchase') {
+    add('Property - Purchase','Sale & Purchase Agreement','Signed copy including all conditions',true,'spa');
+    add('Property - Purchase','Evidence of Deposit','Bank statement or KiwiSaver balance showing deposit',true,'deposit');
+    add('Property - Purchase','KiwiSaver First Home Withdrawal Letter','If using KiwiSaver for deposit',false,'ks_withdraw');
+    add('Property - Purchase','Building Report / LIM Report','If obtained',false,'lim');
+  }
+  if(mt==='remortgage') {
+    add('Property - Remortgage','Current Mortgage Statements (Last 3 Months)','For all mortgages being refinanced',true,'curr_mort');
+    add('Property - Remortgage','Property Rates Notice','Current council rates invoice',true,'rates');
+    add('Property - Remortgage','Recent Valuation or Evidence of Equity','Registered valuation or recent CV',false,'valuation');
+  }
+  if(d.hasTrust) {
+    add('Trust / Company','Trust Deed','Full executed trust deed including variations',true,'trust_deed');
+    add('Trust / Company','Certificate of Title - Trust Properties','For each property held in trust',true,'title');
+    add('Trust / Company','Trust Tax Returns (Last 2 Years)','Filed IR6',true,'trust_tax');
+    add('Trust / Company','Trust Bank Statements (Last 3 Months)','Main trust operating account',false,'trust_bank');
+  }
+  if(d.hasRentalProperties) {
+    add('Rental Properties','Tenancy Agreements','Current signed agreements for all rentals',true,'tenancy');
+    add('Rental Properties','Rental Income Evidence (Last 3 Months)','Rental or property manager statements',true,'rental_inc');
+    add('Rental Properties','Rental Property Insurance Certificates','For all investment properties',false,'rental_ins');
+    if(d.rentalPropertyCount>1) add('Rental Properties','Schedule of Properties','Summary of all rentals, values and mortgages',false,'prop_sched');
+  }
+  add('Existing Liabilities','Statements for All Existing Mortgages','Last statement for each mortgage account',true,'exist_mort');
+  add('Existing Liabilities','Credit Card Statements (Last 3 Months)','For all cards listed in the fact find',true,'cc_stmts');
+  return list;
+}
+function buildChecklist() {
+  const docs = getDocs(); const d = S.data;
+  docs.forEach(doc => { if(doc.req) S.checkedDocs.add(doc.id); });
+  const sections = {};
+  docs.forEach(doc => { if(!sections[doc.sec]) sections[doc.sec]=[]; sections[doc.sec].push(doc); });
+  let html = '';
+  Object.entries(sections).forEach(([sec,items]) => {
+    const sel = items.filter(i=>S.checkedDocs.has(i.id)).length;
+    html += '<div class="section-header" id="sh_'+sec.replace(/\W/g,'_')+'"><span>'+sec+'</span><span class="badge badge-secondary">'+sel+'/'+items.length+'</span></div>';
+    items.forEach(doc => {
+      const on = S.checkedDocs.has(doc.id);
+      const avatars = d.applicants.map((a,i)=>'<div class="av av-sm '+AV_COLORS[i%AV_COLORS.length]+'" title="'+a.firstName+' '+a.lastName+'">'+(a.firstName?.[0]||'')+(a.lastName?.[0]||'')+'</div>').join('');
+      html += '<div class="doc-row '+(on?'':'unchecked')+'" id="row_'+doc.id+'" onclick="toggleDoc(''+doc.id+'')">'
+        +'<div class="doc-check">'+(on?'v':'')+'</div>'
+        +'<div class="doc-main"><div class="doc-name">'+doc.name+'</div><div class="doc-desc">'+doc.desc+'</div></div>'
+        +'<div class="doc-right"><div class="av-stack">'+avatars+'</div>'
+        +'<span class="badge '+(doc.req?'badge-blue':'badge-outline')+'">'+(doc.req?'Required':'Optional')+'</span>'
+        +'</div></div>';
+    });
+  });
+  document.getElementById('docList').innerHTML = html;
+  document.getElementById('summaryStrip').innerHTML =
+    '<div class="ss-item"><div class="ss-label">Applicants</div><div class="ss-value">'+d.applicants.length+'</div></div>'
+    +'<div class="ss-item"><div class="ss-label">Type</div><div class="ss-value" style="font-size:.875rem;">'+(S.mortgageType==='remortgage'?'Remortgage':'Purchase')+'</div></div>'
+    +'<div class="ss-item"><div class="ss-label">Self Employed</div><div class="ss-value" style="font-size:.875rem;">'+(d.isSelfEmployed?'Yes':'No')+'</div></div>'
+    +'<div class="ss-item"><div class="ss-label">Trust</div><div class="ss-value" style="font-size:.875rem;">'+(d.hasTrust?'Yes':'No')+'</div></div>'
+    +'<div class="ss-item"><div class="ss-label">Rentals</div><div class="ss-value">'+(d.rentalPropertyCount||0)+'</div></div>';
+  updateCount();
+}
+function toggleDoc(id) {
+  const row = document.getElementById('row_'+id);
+  if(S.checkedDocs.has(id)) { S.checkedDocs.delete(id); row?.classList.add('unchecked'); if(row) row.querySelector('.doc-check').textContent=''; }
+  else { S.checkedDocs.add(id); row?.classList.remove('unchecked'); if(row) row.querySelector('.doc-check').textContent='v'; }
+  updateCount(); updateSectionHeaders();
+}
+function updateSectionHeaders() {
+  const docs = getDocs(); const sections = {};
+  docs.forEach(doc => { if(!sections[doc.sec]) sections[doc.sec]=[]; sections[doc.sec].push(doc); });
+  Object.entries(sections).forEach(([sec,items]) => {
+    const el = document.getElementById('sh_'+sec.replace(/\W/g,'_'));
+    if(el) el.querySelector('.badge').textContent = items.filter(i=>S.checkedDocs.has(i.id)).length+'/'+items.length;
+  });
+}
+function updateCount() { const el = document.getElementById('docCountLabel'); if(el) el.textContent = S.checkedDocs.size+' selected'; }
+
+// -- Review --
+function buildReview() {
+  const d = S.data;
+  const docs = getDocs().filter(doc=>S.checkedDocs.has(doc.id));
+  const dueDays = parseInt(localStorage.getItem('due_days')||'7');
+  const dueDate = new Date(Date.now()+dueDays*86400000).toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('finalReview').innerHTML =
+    '<div style="margin-bottom:1rem;">'
+    +'<div class="text-sm text-muted font-semibold mb-3" style="text-transform:uppercase;letter-spacing:.05em;">Applicants</div>'
+    +d.applicants.map((a,i)=>'<div class="flex items-center gap-3" style="padding:.625rem 0;border-bottom:1px solid var(--border);">'
+      +'<div class="av '+AV_COLORS[i%AV_COLORS.length]+'">'+(a.firstName?.[0]||'')+(a.lastName?.[0]||'')+'</div>'
+      +'<div style="flex:1;"><div style="font-weight:600;font-size:.875rem;">'+a.firstName+' '+a.lastName+'</div>'
+      +'<div class="text-sm text-muted">'+([a.email,a.phone].filter(Boolean).join(' - ')||'-')+'</div></div>'
+      +'<span class="badge badge-secondary">'+(a.employmentType||'-')+'</span></div>').join('')
+    +'</div>'
+    +'<div class="data-grid mb-4">'
+    +'<div class="dc"><div class="dc-label">Mortgage Type</div><div class="dc-value">'+(S.mortgageType==='remortgage'?'Remortgage':'Residential Purchase')+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Due Date</div><div class="dc-value">'+dueDate+'</div></div>'
+    +'<div class="dc"><div class="dc-label">Documents</div><div class="dc-value blue">'+docs.length+' items</div></div>'
+    +'<div class="dc"><div class="dc-label">Sections</div><div class="dc-value">'+(new Set(docs.map(d=>d.sec))).size+'</div></div>'
+    +'</div>'
+    +'<div><div class="text-sm text-muted font-semibold mb-3" style="text-transform:uppercase;letter-spacing:.05em;">Documents to Request</div>'
+    +'<div style="display:flex;flex-wrap:wrap;">'+docs.map(d=>'<span class="doc-pill">'+d.name+'</span>').join('')+'</div></div>';
+  if(S.csToken) setConnected(S.csToken);
+}
+
+// -- Send --
+async function sendToContentSnare() {
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  showLoading('Sending to Content Snare...', 'Creating clients and document request');
+  const d = S.data;
+  const docs = getDocs().filter(doc=>S.checkedDocs.has(doc.id));
+  const headers = { 'Content-Type':'application/json', 'Authorization':'Bearer '+S.csToken };
+  const dueDays = parseInt(localStorage.getItem('due_days')||'7');
+  try {
+    const clientIds = [];
+    for (const a of d.applicants) {
+      const cr = await fetch(CS_API+'/clients', { method:'POST', headers, body:JSON.stringify({name:a.firstName+' '+a.lastName, email:a.email, phone:a.phone||undefined}) });
+      if(!cr.ok) throw new Error('Failed to create client: '+cr.status+' '+await cr.text());
+      clientIds.push((await cr.json()).id);
+    }
+    const secMap = {};
+    docs.forEach(doc => { if(!secMap[doc.sec]) secMap[doc.sec]=[]; secMap[doc.sec].push({name:doc.name,description:doc.desc}); });
+    const reqName = d.applicants.map(a=>a.firstName).join(' & ')+' - '+(S.mortgageType==='remortgage'?'Remortgage':'Purchase')+' - Document Request';
+    const rr = await fetch(CS_API+'/requests', { method:'POST', headers, body:JSON.stringify({
+      name:reqName, client_ids:clientIds,
+      due_date:new Date(Date.now()+dueDays*86400000).toISOString().split('T')[0],
+      sections:Object.entries(secMap).map(([title,items])=>({title,fields:items.map(i=>({label:i.name,description:i.description,type:'file'}))}))
+    })});
+    if(!rr.ok) throw new Error('Failed to create request: '+rr.status+' '+await rr.text());
+    const rd = await rr.json();
+    hideLoading();
+    const rc = document.getElementById('resultCard'); rc.classList.remove('hidden');
+    document.getElementById('resultContent').innerHTML =
+      '<div class="alert alert-green mb-4"><div><strong>Sent successfully!</strong> - '+docs.length+' documents requested across '+Object.keys(secMap).length+' sections.</div></div>'
+      +'<div class="data-grid">'
+      +'<div class="dc"><div class="dc-label">Client(s)</div><div class="dc-value text-sm">'+d.applicants.map(a=>a.firstName+' '+a.lastName).join(', ')+'</div></div>'
+      +'<div class="dc"><div class="dc-label">Documents</div><div class="dc-value blue">'+docs.length+' items</div></div>'
+      +'<div class="dc full"><div class="dc-label">Request Name</div><div class="dc-value text-sm">'+reqName+'</div></div>'
+      +(rd.id?'<div class="dc full"><div class="dc-label">Request ID</div><div class="dc-value" style="font-family:monospace;font-size:.8125rem;">'+rd.id+'</div></div>':'')
+      +'</div>';
+    btn.textContent = 'Sent'; rc.scrollIntoView({behavior:'smooth'});
+  } catch(e) {
+    hideLoading(); btn.disabled=false; btn.textContent='Send to Content Snare';
+    const rc=document.getElementById('resultCard'); rc.classList.remove('hidden');
+    document.getElementById('resultContent').innerHTML='<div class="alert alert-destructive"><div><strong>Error:</strong> '+e.message+'</div></div>';
+  }
+}
+
+function showLoading(t,s) { document.getElementById('loadingText').textContent=t; document.getElementById('loadingSub').textContent=s; document.getElementById('loadingOverlay').classList.add('active'); }
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
 </script>
 </body>
 </html>
