@@ -209,7 +209,7 @@ label { display:block;font-size:.875rem;font-weight:500;margin-bottom:6px; } .la
 
 <script>
 const XANO_BASE='https://xxgk-ehxz-nx2m.a2.xano.io/api:WEOgB9UF';
-const XANO_LOGIN=XANO_BASE+'/auth/login',XANO_EXTRACT=XANO_BASE+'/portal/extract-pdf',XANO_SETTINGS_GET=XANO_BASE+'/portal/settings',XANO_SETTINGS_POST=XANO_BASE+'/portal/settings';
+const XANO_LOGIN='https://api.total.nz/api:Vg3BByKf/auth/login',XANO_EXTRACT=XANO_BASE+'/portal/extract-pdf',XANO_SETTINGS_GET=XANO_BASE+'/portal/settings',XANO_SETTINGS_POST=XANO_BASE+'/portal/settings';
 const CS_AUTH_URL='https://api.contentsnare.com/oauth/authorization',CS_TOKEN_URL='https://api.contentsnare.com/oauth/token',CS_API='https://api.contentsnare.com/partner_api/v1';
 const CS_REDIRECT_URI=window.location.origin+window.location.pathname;
 const S={authToken:sessionStorage.getItem('auth_token')||null,csToken:sessionStorage.getItem('cs_token')||null,pdfFile:null,mortgageType:'residential_purchase',data:null,checkedDocs:new Set(),currentApplicant:0,csClientId:null,csClientSecret:null};
