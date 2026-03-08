@@ -4,808 +4,252 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Total Mortgages — Document Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #f4f4f6;
-    --white: #ffffff;
-    --border: #e5e5ea;
-    --border-light: #f0f0f5;
-    --text-primary: #1a1a2e;
-    --text-secondary: #6b6b80;
-    --text-muted: #9999aa;
-    --accent: #2563eb;
-    --accent-light: #eff6ff;
-    --accent-hover: #1d4ed8;
-    --blue: #4a7cf7;
-    --blue-light: #eef2ff;
-    --green: #22c55e;
-    --green-light: #f0fdf4;
-    --amber: #f59e0b;
-    --amber-light: #fffbeb;
-    --red: #ef4444;
-    --red-light: #fef2f2;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --radius: 10px;
-    --radius-sm: 7px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; font-size: 14px; line-height: 1.5; }
-
-  /* Nav */
-  .topnav { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
-  .nav-logo { display: flex; align-items: center; gap: 10px; }
-  .nav-mark { width: 30px; height: 30px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; }
-  .nav-name { font-weight: 600; font-size: 15px; }
-  .test-pill { background: var(--amber-light); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 500; }
-
-  /* Layout */
-  .page { max-width: 800px; margin: 0 auto; padding: 28px 20px 80px; }
-  .page-header { margin-bottom: 22px; }
-  .page-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
-  .page-header p { font-size: 13px; color: var(--text-secondary); }
-
-  /* Steps */
-  .step-bar { display: flex; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 18px; box-shadow: var(--shadow-sm); }
-  .step-item { flex: 1; padding: 11px 14px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted); border-right: 1px solid var(--border); }
-  .step-item:last-child { border-right: none; }
-  .step-item.active { color: var(--accent); background: var(--accent-light); }
-  .step-item.done { color: var(--green); background: var(--green-light); }
-  .step-num { width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.07); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-  .step-item.active .step-num { background: var(--accent); color: white; }
-  .step-item.done .step-num { background: var(--green); color: white; }
-
-  /* Card */
-  .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); margin-bottom: 12px; overflow: hidden; }
-  .card-head { padding: 18px 20px 0; display: flex; align-items: center; gap: 12px; }
-  .card-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-  .ci-pink { background: var(--accent-light); }
-  .ci-blue { background: var(--blue-light); }
-  .ci-green { background: var(--green-light); }
-  .ci-amber { background: var(--amber-light); }
-  .card-title { font-size: 15px; font-weight: 600; }
-  .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
-  .card-body { padding: 16px 20px 20px; }
-
-  /* Upload */
-  .upload-zone { border: 1.5px dashed var(--border); border-radius: var(--radius-sm); padding: 36px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg); position: relative; overflow: hidden; }
-  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: var(--accent-light); }
-  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .upload-zone h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-  .upload-zone p { font-size: 12px; color: var(--text-secondary); }
-  .link { color: var(--accent); font-weight: 500; }
-  .file-ready { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--green-light); border: 1px solid rgba(34,197,94,0.25); border-radius: var(--radius-sm); margin-top: 10px; font-size: 13px; color: #16a34a; font-weight: 500; }
-
-  /* Fields */
-  .field { display: flex; flex-direction: column; gap: 6px; }
-  .field + .field { margin-top: 14px; }
-  label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
-  select, input[type="text"], input[type="password"] { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-primary); background: var(--white); width: 100%; outline: none; transition: border-color 0.15s, box-shadow 0.15s; appearance: none; }
-  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6b80' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-  select:focus, input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-
-  /* Buttons */
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap; }
-  .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover { background: var(--accent-hover); }
-  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-  .btn-ghost:hover { background: var(--bg); }
-  .btn-sm { padding: 6px 12px; font-size: 12px; }
-
-  /* Action row */
-  .action-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 13px 20px; border-top: 1px solid var(--border-light); background: var(--bg); }
-  .error-msg { flex: 1; font-size: 12px; color: var(--red); }
-
-  /* Alerts */
-  .alert { display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.5; }
-  .alert-info { background: var(--blue-light); color: #2563eb; border: 1px solid rgba(74,124,247,0.2); }
-  .alert-success { background: var(--green-light); color: #16a34a; border: 1px solid rgba(34,197,94,0.2); }
-  .alert-warn { background: var(--amber-light); color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
-  .alert-error { background: var(--red-light); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
-
-  /* Data grid */
-  .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border-light); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-  .dc { background: var(--white); padding: 11px 14px; }
-  .dc.full { grid-column: 1 / -1; }
-  .dc-label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-bottom: 3px; }
-  .dc-value { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-  .dc-value.accent { color: var(--accent); }
-  .dc-value.green { color: var(--green); }
-
-  /* Applicant tabs */
-  .appl-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
-  .appl-tab { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--white); font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
-  .appl-tab.active { background: var(--accent); border-color: var(--accent); color: white; }
-
-  /* Flags */
-  .flags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
-  .flag-tag { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: var(--blue-light); color: var(--blue); border: 1px solid rgba(74,124,247,0.2); }
-
-  /* Toolbar */
-  .toolbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
-  .toolbar-left { display: flex; align-items: center; gap: 8px; }
-  .filter-btn { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--white); font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
-  .filter-btn:hover { background: var(--bg); }
-
-  /* Summary strip */
-  .summary-strip { display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin: 14px 20px 0; background: var(--white); }
-  .ss-item { flex: 1; padding: 11px 14px; border-right: 1px solid var(--border); text-align: center; }
-  .ss-item:last-child { border-right: none; }
-  .ss-label { font-size: 10px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-  .ss-value { font-size: 16px; font-weight: 700; }
-  .ss-value.pink { color: var(--accent); }
-
-  /* Doc rows — matching Figma */
-  .doc-section-hdr { padding: 7px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: var(--text-muted); background: var(--bg); border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
-  .doc-row { display: flex; align-items: center; padding: 13px 20px; border-bottom: 1px solid var(--border-light); gap: 13px; transition: background 0.1s; cursor: pointer; }
-  .doc-row:last-child { border-bottom: none; }
-  .doc-row:hover { background: #fafafa; }
-  .doc-row.off { opacity: 0.45; }
-  .doc-file-icon { width: 34px; height: 34px; border-radius: 7px; background: var(--bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-  .doc-main { flex: 1; min-width: 0; }
-  .doc-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .doc-meta { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
-  .meta-dot { width: 2px; height: 2px; background: var(--text-muted); border-radius: 50%; display: inline-block; }
-  .doc-right { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
-
-  /* Avatars */
-  .av { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; flex-shrink: 0; }
-  .av-pink { background: #e8619a; }
-  .av-blue { background: #4a7cf7; }
-  .av-teal { background: #14b8a6; }
-  .av-name { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
-
-  /* Status pills */
-  .sp { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-  .sp-req { background: var(--accent-light); color: var(--accent); }
-  .sp-opt { background: var(--amber-light); color: var(--amber); }
-  .sp-requested { background: var(--blue-light); color: var(--blue); }
-
-  .icon-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: var(--white); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; color: var(--text-muted); transition: all 0.15s; flex-shrink: 0; }
-  .icon-btn:hover { background: var(--bg); }
-
-  /* Bottom bar */
-  .bottom-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
-
-  /* Review */
-  .review-block { margin-bottom: 18px; }
-  .review-block-title { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
-  .doc-pills { display: flex; flex-wrap: wrap; gap: 5px; }
-  .doc-pill { background: var(--blue-light); color: var(--blue); border: 1px solid rgba(74,124,247,0.2); border-radius: 5px; padding: 3px 9px; font-size: 11px; font-weight: 500; }
-
-  pre.payload { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; font-size: 11px; color: var(--text-secondary); overflow-x: auto; max-height: 260px; overflow-y: auto; line-height: 1.6; font-family: 'SF Mono','Fira Code',monospace; }
-
-  /* Divider */
-  .divider { height: 1px; background: var(--border-light); margin: 16px 0; }
-
-  /* Loading */
-  .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(244,244,246,0.88); z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 14px; backdrop-filter: blur(3px); }
-  .loading-overlay.active { display: flex; }
-  .spinner { width: 38px; height: 38px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-size: 14px; font-weight: 600; }
-  .loading-sub { font-size: 12px; color: var(--text-secondary); }
-
-  /* Sections */
-  .section { display: none; }
-  .section.active { display: block; }
-
-  @media (max-width: 580px) {
-    .data-grid { grid-template-columns: 1fr; }
-    .dc.full { grid-column: 1; }
-    .step-item span { display: none; }
-    .doc-right .av-name { display: none; }
-  }
+/* ── shadcn/ui-inspired design tokens ──────────────────────────────── */
+:root {
+  --background: #ffffff; --foreground: #09090b; --card: #ffffff; --card-foreground: #09090b;
+  --primary: #18181b; --primary-foreground: #fafafa;
+  --secondary: #f4f4f5; --secondary-foreground: #18181b;
+  --muted: #f4f4f5; --muted-foreground: #71717a;
+  --destructive: #ef4444; --border: #e4e4e7; --input: #e4e4e7; --ring: #18181b; --radius: 0.5rem;
+  --blue: #2563eb; --blue-light: #eff6ff; --blue-border: #bfdbfe;
+  --green: #16a34a; --green-light: #f0fdf4; --green-border: #bbf7d0;
+  --amber: #d97706; --amber-light: #fffbeb; --amber-border: #fde68a;
+  --red-light: #fef2f2; --red-border: #fecaca;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Geist', -apple-system, sans-serif; background: #fafafa; color: var(--foreground); min-height: 100vh; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.btn { display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 1rem;height:36px;border-radius:var(--radius);font-family:inherit;font-size:.875rem;font-weight:500;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;outline:none; }
+.btn-default { background:var(--primary);color:var(--primary-foreground); } .btn-default:hover { background:#27272a; } .btn-default:disabled { opacity:.5;cursor:not-allowed; }
+.btn-outline { background:transparent;color:var(--foreground);border:1px solid var(--border); } .btn-outline:hover { background:var(--muted); }
+.btn-ghost { background:transparent;color:var(--foreground); } .btn-ghost:hover { background:var(--muted); }
+.btn-sm { height:32px;padding:0 .75rem;font-size:.8125rem; } .btn-lg { height:40px;padding:0 1.25rem;font-size:.9375rem; } .btn-icon { width:36px;padding:0; }
+.input,select { display:flex;width:100%;height:36px;border:1px solid var(--input);border-radius:var(--radius);background:var(--background);padding:0 .75rem;font-family:inherit;font-size:.875rem;color:var(--foreground);outline:none;transition:border-color .15s,box-shadow .15s;appearance:none; }
+.input:focus,select:focus { border-color:var(--ring);box-shadow:0 0 0 3px rgb(24 24 27 / .08); }
+.input::placeholder { color:var(--muted-foreground); }
+select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2371717a' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px; }
+label { display:block;font-size:.875rem;font-weight:500;margin-bottom:6px; } .label-hint { font-size:.8125rem;color:var(--muted-foreground);font-weight:400; } .form-group { display:flex;flex-direction:column;gap:6px; }
+.badge { display:inline-flex;align-items:center;border-radius:9999px;padding:2px 10px;font-size:.75rem;font-weight:500;line-height:1.5; }
+.badge-default { background:var(--primary);color:var(--primary-foreground); } .badge-secondary { background:var(--secondary);color:var(--secondary-foreground); } .badge-outline { border:1px solid var(--border);color:var(--muted-foreground); }
+.badge-blue { background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-border); } .badge-green { background:var(--green-light);color:var(--green);border:1px solid var(--green-border); }
+.badge-amber { background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border); } .badge-destructive { background:var(--red-light);color:var(--destructive);border:1px solid var(--red-border); }
+.card { background:var(--card);border:1px solid var(--border);border-radius:calc(var(--radius) + 2px);box-shadow:var(--shadow-sm); }
+.card-header { padding:1.25rem 1.5rem 0; } .card-title { font-size:1rem;font-weight:600; } .card-description { font-size:.875rem;color:var(--muted-foreground);margin-top:2px; }
+.card-content { padding:1.25rem 1.5rem; } .card-footer { padding:0 1.5rem 1.25rem;display:flex;align-items:center;gap:8px; }
+.alert { padding:.75rem 1rem;border-radius:var(--radius);border:1px solid;display:flex;align-items:flex-start;gap:10px;font-size:.875rem; }
+.alert-default { background:var(--background);border-color:var(--border); } .alert-blue { background:var(--blue-light);border-color:var(--blue-border);color:#1e40af; }
+.alert-green { background:var(--green-light);border-color:var(--green-border);color:#166534; } .alert-amber { background:var(--amber-light);border-color:var(--amber-border);color:#92400e; }
+.alert-destructive { background:var(--red-light);border-color:var(--red-border);color:#991b1b; }
+.topnav { background:var(--background);border-bottom:1px solid var(--border);height:56px;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50; }
+.nav-brand { display:flex;align-items:center;gap:10px; } .nav-mark { width:28px;height:28px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--primary-foreground);font-weight:700;font-size:13px;flex-shrink:0; }
+.nav-name { font-weight:600;font-size:.9375rem; } .nav-divider { width:1px;height:20px;background:var(--border); } .nav-page-title { font-size:.875rem;color:var(--muted-foreground); }
+.nav-right { display:flex;align-items:center;gap:8px; }
+.page { max-width:820px;margin:0 auto;padding:2rem 1.25rem 5rem; } .page-header { margin-bottom:1.5rem; }
+.page-header h1 { font-size:1.5rem;font-weight:600;letter-spacing:-.025em; } .page-header p { color:var(--muted-foreground);font-size:.875rem;margin-top:4px; }
+.stepper { display:flex;align-items:center;margin-bottom:1.5rem; }
+.step-item { display:flex;align-items:center;gap:8px;font-size:.8125rem;font-weight:500;color:var(--muted-foreground);padding:0 4px; } .step-item.active { color:var(--foreground); } .step-item.done { color:var(--green); }
+.step-num { width:24px;height:24px;border-radius:9999px;flex-shrink:0;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.6875rem;font-weight:700; }
+.step-item.active .step-num { border-color:var(--primary);background:var(--primary);color:var(--primary-foreground); } .step-item.done .step-num { border-color:var(--green);background:var(--green-light);color:var(--green); }
+.step-connector { flex:1;height:1px;background:var(--border);margin:0 8px;min-width:20px; } .step-connector.done { background:var(--green); }
+.upload-zone { border:1.5px dashed var(--border);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--muted);position:relative;overflow:hidden; }
+.upload-zone:hover,.upload-zone.drag-over { border-color:var(--primary);background:#ececed; } .upload-zone input { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+.upload-icon { font-size:1.75rem;margin-bottom:10px; } .upload-zone h3 { font-size:.9375rem;font-weight:600;margin-bottom:4px; } .upload-zone p { font-size:.8125rem;color:var(--muted-foreground); }
+.upload-link { color:var(--blue);font-weight:500;text-decoration:underline;text-underline-offset:3px; }
+.tabs { display:flex;border-bottom:1px solid var(--border);gap:0;margin-bottom:1rem; }
+.tab { padding:.5rem 1rem;font-size:.875rem;font-weight:500;color:var(--muted-foreground);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px; }
+.tab:hover { color:var(--foreground); } .tab.active { color:var(--foreground);border-bottom-color:var(--primary); }
+.data-grid { display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden; }
+.dc { background:var(--background);padding:.75rem 1rem; } .dc.full { grid-column:1/-1; }
+.dc-label { font-size:.75rem;font-weight:500;color:var(--muted-foreground);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em; } .dc-value { font-size:.9375rem;font-weight:500; } .dc-value.green { color:var(--green); } .dc-value.blue { color:var(--blue); }
+.av { width:28px;height:28px;border-radius:9999px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.6875rem;font-weight:700;border:1.5px solid var(--background); }
+.av-zinc { background:#e4e4e7;color:#52525b; } .av-blue { background:#dbeafe;color:#1d4ed8; } .av-violet { background:#ede9fe;color:#7c3aed; } .av-rose { background:#ffe4e6;color:#be123c; }
+.av-sm { width:24px;height:24px;font-size:.625rem; } .av-lg { width:40px;height:40px;font-size:.875rem; }
+.section-header { display:flex;align-items:center;justify-content:space-between;padding:.625rem 1rem;background:var(--muted);border-bottom:1px solid var(--border);font-size:.8125rem;font-weight:600;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.05em; }
+.doc-row { display:flex;align-items:center;gap:12px;padding:.75rem 1rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s; }
+.doc-row:last-child { border-bottom:none; } .doc-row:hover { background:var(--muted); } .doc-row.unchecked { opacity:.5; }
+.doc-check { width:18px;height:18px;border-radius:4px;border:1.5px solid var(--input);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;transition:all .15s; }
+.doc-row:not(.unchecked) .doc-check { background:var(--primary);border-color:var(--primary); }
+.doc-main { flex:1;min-width:0; } .doc-name { font-size:.875rem;font-weight:500; } .doc-desc { font-size:.8125rem;color:var(--muted-foreground);margin-top:1px; }
+.doc-right { display:flex;align-items:center;gap:8px;flex-shrink:0; } .av-stack { display:flex; } .av-stack .av:not(:first-child) { margin-left:-6px; }
+.settings-nav { display:flex;flex-direction:column;gap:1px; }
+.settings-nav-item { display:flex;align-items:center;gap:10px;padding:.625rem .75rem;border-radius:var(--radius);font-size:.875rem;font-weight:500;cursor:pointer;transition:background .1s;color:var(--muted-foreground); }
+.settings-nav-item:hover,.settings-nav-item.active { background:var(--muted);color:var(--foreground); } .settings-icon { width:18px;height:18px;flex-shrink:0; }
+.login-wrap { min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fafafa;padding:1rem; }
+.overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center; } .overlay.active { display:flex; }
+.overlay-box { background:var(--card);border:1px solid var(--border);border-radius:calc(var(--radius)+4px);padding:2rem;text-align:center;max-width:300px;width:100%;box-shadow:var(--shadow-md); }
+.spinner { width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.summary-strip { display:flex;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem; }
+.ss-item { flex:1;padding:.75rem 1rem;border-right:1px solid var(--border); } .ss-item:last-child { border-right:none; }
+.ss-label { font-size:.6875rem;font-weight:500;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px; } .ss-value { font-size:1rem;font-weight:700; }
+.doc-pill { display:inline-flex;align-items:center;padding:4px 10px;background:var(--muted);border:1px solid var(--border);border-radius:9999px;font-size:.75rem;font-weight:500;margin:3px; }
+.separator { height:1px;background:var(--border); }
+.section { display:none; } .section.active { display:block; } .hidden { display:none!important; }
+.flex { display:flex; } .flex-1 { flex:1; } .items-center { align-items:center; } .justify-between { justify-content:space-between; }
+.gap-2 { gap:.5rem; } .gap-3 { gap:.75rem; } .gap-4 { gap:1rem; } .mt-2 { margin-top:.5rem; } .mt-3 { margin-top:.75rem; } .mt-4 { margin-top:1rem; } .mt-6 { margin-top:1.5rem; }
+.mb-2 { margin-bottom:.5rem; } .mb-4 { margin-bottom:1rem; } .mb-6 { margin-bottom:1.5rem; }
+.w-full { width:100%; } .text-sm { font-size:.875rem; } .text-muted { color:var(--muted-foreground); } .font-semibold { font-weight:600; } .error-msg { font-size:.8125rem;color:var(--destructive); }
+@media (max-width:640px) { .topnav { padding:0 1rem; } .page { padding:1.25rem 1rem 4rem; } .data-grid { grid-template-columns:1fr; } .summary-strip { flex-wrap:wrap; } .ss-item { min-width:50%; } .step-label { display:none; } .doc-right .badge { display:none; } #settingsLayout { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="loading-text" id="loadingText">Reading PDF...</div>
-  <div class="loading-sub" id="loadingSub">Extracting client data</div>
+<!-- LOGIN -->
+<div id="loginScreen" class="login-wrap">
+  <div style="width:100%;max-width:400px;" class="card">
+    <div class="card-header" style="padding:2rem 2rem 0;">
+      <div class="flex items-center gap-3 mb-6"><div class="nav-mark" style="width:32px;height:32px;font-size:15px;">T</div><span style="font-weight:700;font-size:1.0625rem;">Total Mortgages</span></div>
+      <div class="card-title" style="font-size:1.125rem;">Document Portal</div>
+      <div class="card-description">Sign in to your advisor account to continue.</div>
+    </div>
+    <div class="card-content" style="padding:1.5rem 2rem 2rem;">
+      <div class="form-group mb-4"><label for="loginEmail">Email address</label><input type="text" id="loginEmail" class="input" placeholder="you@totalmortgages.co.nz" autocomplete="email"></div>
+      <div class="form-group mb-4"><label for="loginPassword">Password</label><input type="password" id="loginPassword" class="input" placeholder="••••••••" autocomplete="current-password"></div>
+      <div id="loginError" class="error-msg mb-4 hidden"></div>
+      <button class="btn btn-default w-full btn-lg" onclick="doLogin()">Sign in</button>
+      <p class="text-sm text-muted mt-3" style="text-align:center;">Access restricted to authorised advisors only.</p>
+    </div>
+  </div>
 </div>
 
-<nav class="topnav">
-  <div class="nav-logo">
-    <div class="nav-mark">T</div>
-    <span class="nav-name">Total Mortgages</span>
-  </div>
-  <span id="navStatus" class="test-pill" style="display:none;">🔗 Content Snare Connected</span>
-</nav>
-
-<div class="page">
-
-  <div class="page-header">
-    <h1>Document Portal</h1>
-    <p>Upload a Trail Statement of Position to generate a tailored client document request</p>
-  </div>
-
-  <div class="step-bar">
-    <div class="step-item active" id="si1"><div class="step-num">1</div><span>Upload</span></div>
-    <div class="step-item" id="si2"><div class="step-num">2</div><span>Review Data</span></div>
-    <div class="step-item" id="si3"><div class="step-num">3</div><span>Documents</span></div>
-    <div class="step-item" id="si4"><div class="step-num">4</div><span>Send</span></div>
-  </div>
-
-  <!-- ═══ 1: UPLOAD ═══ -->
-  <div class="section active" id="section1">
-    <div class="card">
-      <div class="card-head">
-        <div class="card-icon ci-pink">📄</div>
-        <div><div class="card-title">Upload Trail PDF</div><div class="card-sub">Statement of Position exported from Trail CRM</div></div>
-      </div>
-      <div class="card-body">
-        <div class="upload-zone" id="uploadZone">
-          <input type="file" id="pdfInput" accept=".pdf" />
-          <div style="font-size:32px;margin-bottom:10px;">📋</div>
-          <h3>Drop your Trail PDF here</h3>
-          <p>or <span class="link">browse files</span></p>
-        </div>
-        <div id="fileStatus"></div>
-      </div>
+<!-- APP SHELL -->
+<div id="appShell" class="hidden">
+  <header class="topnav">
+    <div class="nav-brand"><div class="nav-mark">T</div><span class="nav-name">Total Mortgages</span><div class="nav-divider"></div><span class="nav-page-title" id="navPageTitle">Document Portal</span></div>
+    <div class="nav-right">
+      <span id="csStatusPill" class="badge badge-outline hidden"></span>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="showSettings()" title="Settings"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="doLogout()" title="Sign out"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
     </div>
+  </header>
 
-    <div class="card">
-      <div class="card-head">
-        <div class="card-icon ci-blue">🏠</div>
-        <div><div class="card-title">Application Type</div><div class="card-sub">Select the mortgage type</div></div>
+  <!-- SETTINGS -->
+  <div id="settingsPanel" class="hidden">
+    <div class="page">
+      <div class="page-header">
+        <button class="btn btn-ghost btn-sm mb-4" onclick="hideSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Portal</button>
+        <h1>Settings</h1>
+        <p>Manage your API credentials and portal preferences.</p>
       </div>
-      <div class="card-body">
-        <div class="field">
-          <label>Mortgage Type</label>
-          <select id="mortgageType">
-            <option value="residential_purchase">Residential Purchase</option>
-            <option value="remortgage">Remortgage / Refinance</option>
-          </select>
-        </div>
-        <div class="field" style="margin-top:14px;">
-          <label>Anthropic API Key</label>
-          <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off" />
-        </div>
-        <div class="alert alert-info" style="margin-top:12px;margin-bottom:0;">
-          <span>ℹ️</span>
-          <span>Your key is used only for this extraction and never stored. Get yours at <a href="https://console.anthropic.com" target="_blank" style="color:inherit;font-weight:600;">console.anthropic.com</a></span>
-        </div>
-      </div>
-      <div class="action-row">
-        <span class="error-msg" id="step1Error"></span>
-        <button class="btn btn-primary" onclick="startExtraction()">Extract Client Data →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ 2: REVIEW ═══ -->
-  <div class="section" id="section2">
-    <div class="card">
-      <div class="card-head">
-        <div class="card-icon ci-green">✓</div>
-        <div><div class="card-title">Extracted Client Data</div><div class="card-sub">Pulled from Trail Statement of Position</div></div>
-      </div>
-      <div class="card-body">
-        <div class="appl-tabs" id="applTabs"></div>
-        <div id="applData"></div>
-        <div class="divider"></div>
-        <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">Financial Overview</div>
-        <div id="finData"></div>
-        <div class="flags-row" id="flagsRow"></div>
-      </div>
-      <div class="action-row">
-        <button class="btn btn-ghost" onclick="goTo(1)">← Back</button>
-        <button class="btn btn-primary" onclick="goTo(3)">Build Document Checklist →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ 3: DOCUMENTS ═══ -->
-  <div class="section" id="section3">
-    <div class="card">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <div class="filter-btn">☰ Filter ▾</div>
-          <div class="filter-btn">⊞ Expand All ▾</div>
-          <span style="font-size:12px;color:var(--text-muted);" id="docCountLabel"></span>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="goTo(4)">Request Documents →</button>
-      </div>
-      <div class="summary-strip" id="summaryStrip"></div>
-      <div id="docList" style="margin-top:14px;"></div>
-      <div class="bottom-bar">
-        <button class="btn btn-ghost btn-sm" onclick="goTo(2)">← Back</button>
-        <button class="btn btn-primary" onclick="goTo(4)">Review & Send →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ 4: SEND ═══ -->
-  <div class="section" id="section4">
-    <div class="card">
-      <div class="card-head">
-        <div class="card-icon ci-blue">🚀</div>
-        <div><div class="card-title">Review & Send to Content Snare</div><div class="card-sub">Confirm then send directly to Content Snare</div></div>
-      </div>
-      <div class="card-body">
-        <div id="finalReview"></div>
-
-        <!-- Auth status bar -->
-        <div id="authStatus" style="margin-top:14px;">
-          <div class="alert alert-warn" id="authNeeded">
-            <span>🔗</span>
-            <div><strong>Connect Content Snare</strong> — authorise once to enable live sending. Your session stays connected until you close the browser.
-              <div style="margin-top:10px;">
-                <button class="btn btn-primary btn-sm" onclick="startOAuth()">Connect Content Snare →</button>
-              </div>
+      <div style="display:grid;grid-template-columns:180px 1fr;gap:1.5rem;" id="settingsLayout">
+        <nav class="settings-nav">
+          <div class="settings-nav-item active" onclick="showSettingsTab('integrations',this)"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Integrations</div>
+          <div class="settings-nav-item" onclick="showSettingsTab('profile',this)"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profile</div>
+        </nav>
+        <div>
+          <div id="settingsTab-integrations">
+            <div class="card mb-4">
+              <div class="card-header"><div class="flex items-center gap-3"><div style="width:36px;height:36px;background:var(--muted);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.125rem;flex-shrink:0;">🤖</div><div style="flex:1;"><div class="card-title">Anthropic</div><div class="card-description">Used to extract client data from Trail PDFs</div></div><span id="anthropicStatus" class="badge badge-outline">Not configured</span></div></div>
+              <div class="card-content"><div class="form-group"><label for="settingsAnthropicKey">API Key <span class="label-hint">(stored securely in Xano — never in browser)</span></label><input type="password" id="settingsAnthropicKey" class="input" placeholder="sk-ant-api03-••••••••"></div></div>
+              <div class="separator"></div><div class="card-footer"><button class="btn btn-default btn-sm" onclick="saveAnthropicKey()">Save API Key</button><span id="anthropicSaveMsg" class="text-sm text-muted hidden"></span></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="flex items-center gap-3"><div style="width:36px;height:36px;background:var(--muted);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.125rem;flex-shrink:0;">📋</div><div style="flex:1;"><div class="card-title">Content Snare</div><div class="card-description">Client document request platform</div></div><span id="csConfigStatus" class="badge badge-outline">Not configured</span></div></div>
+              <div class="card-content"><div class="form-group mb-4"><label for="settingsCsClientId">OAuth Client ID</label><input type="text" id="settingsCsClientId" class="input" placeholder="s7FYbJlw7XL..."></div><div class="form-group"><label for="settingsCsClientSecret">OAuth Client Secret <span class="label-hint">(stored securely in Xano)</span></label><input type="password" id="settingsCsClientSecret" class="input" placeholder="E7REDdUQu..."></div></div>
+              <div class="separator"></div><div class="card-footer"><button class="btn btn-default btn-sm" onclick="saveCsCredentials()">Save Credentials</button><span id="csSaveMsg" class="text-sm text-muted hidden"></span></div>
             </div>
           </div>
-          <div class="alert alert-success" id="authDone" style="display:none;">
-            <span>✅</span>
-            <div><strong>Connected to Content Snare</strong> — ready to send.</div>
+          <div id="settingsTab-profile" class="hidden">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Advisor Profile</div><div class="card-description">Your details used in document requests</div></div>
+              <div class="card-content"><div class="form-group mb-4"><label for="settingsAdvisorName">Full Name</label><input type="text" id="settingsAdvisorName" class="input" placeholder="e.g. Jordan Cameron"></div><div class="form-group"><label for="settingsDefaultDueDays">Default Due Date <span class="label-hint">(days from today)</span></label><input type="text" id="settingsDefaultDueDays" class="input" placeholder="7"></div></div>
+              <div class="separator"></div><div class="card-footer"><button class="btn btn-default btn-sm" onclick="saveProfile()">Save Profile</button><span id="profileSaveMsg" class="text-sm text-muted hidden"></span></div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="action-row">
-        <button class="btn btn-ghost" onclick="goTo(3)">← Back</button>
-        <button class="btn btn-primary" id="sendBtn" onclick="sendToContentSnare()" disabled>Send to Content Snare →</button>
-      </div>
-    </div>
-    <div class="card" id="resultCard" style="display:none;">
-      <div class="card-body" id="resultContent"></div>
     </div>
   </div>
 
+  <!-- MAIN PORTAL -->
+  <div id="mainPortal">
+    <div class="page">
+      <div class="page-header"><h1>Document Portal</h1><p>Upload a Trail Statement of Position to generate and send a tailored document checklist.</p></div>
+      <div class="stepper">
+        <div class="step-item active" id="si1"><div class="step-num">1</div><span class="step-label">Upload</span></div>
+        <div class="step-connector" id="sc1"></div>
+        <div class="step-item" id="si2"><div class="step-num">2</div><span class="step-label">Review</span></div>
+        <div class="step-connector" id="sc2"></div>
+        <div class="step-item" id="si3"><div class="step-num">3</div><span class="step-label">Documents</span></div>
+        <div class="step-connector" id="sc3"></div>
+        <div class="step-item" id="si4"><div class="step-num">4</div><span class="step-label">Send</span></div>
+      </div>
+      <div class="section active" id="section1">
+        <div class="card mb-4"><div class="card-header"><div class="card-title">Upload Trail PDF</div><div class="card-description">Statement of Position exported from Trail CRM</div></div><div class="card-content"><div class="upload-zone" id="uploadZone"><input type="file" id="pdfInput" accept=".pdf"><div class="upload-icon">📄</div><h3>Drop your PDF here</h3><p>or <span class="upload-link">click to browse</span> — Trail Statement of Position only</p></div><div id="fileStatus"></div></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Application Details</div></div><div class="card-content"><div class="form-group"><label for="mortgageType">Application Type</label><select id="mortgageType"><option value="residential_purchase">Residential Purchase</option><option value="remortgage">Remortgage / Refinance</option></select></div></div><div class="separator"></div><div class="card-footer"><span class="error-msg flex-1" id="step1Error"></span><button class="btn btn-default" onclick="startExtraction()">Extract Client Data <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>
+      </div>
+      <div class="section" id="section2">
+        <div class="card mb-4"><div class="card-header"><div class="card-title">Applicants</div><div class="card-description">Extracted from Trail Statement of Position</div><div class="tabs mt-3" id="applTabs"></div></div><div class="card-content" id="applData"></div></div>
+        <div class="card mb-4"><div class="card-header"><div class="card-title">Financial Overview</div></div><div class="card-content" id="finData"></div></div>
+        <div class="card"><div class="card-content"><div id="flagsRow" class="flex gap-2" style="flex-wrap:wrap;min-height:24px;"></div></div><div class="separator"></div><div class="card-footer"><button class="btn btn-outline btn-sm" onclick="goTo(1)">← Back</button><button class="btn btn-default" onclick="goTo(3)" style="margin-left:auto;">Select Documents <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>
+      </div>
+      <div class="section" id="section3">
+        <div class="card mb-4">
+          <div class="card-header"><div class="flex items-center justify-between"><div><div class="card-title">Document Checklist</div><div class="card-description">Review and customise the documents to request</div></div><span class="badge badge-secondary" id="docCountLabel"></span></div><div class="summary-strip mt-3" id="summaryStrip" style="margin:1rem 0 0;"></div></div>
+          <div id="docList" style="border-top:1px solid var(--border);"></div>
+          <div class="separator"></div><div class="card-footer"><button class="btn btn-outline btn-sm" onclick="goTo(2)">← Back</button><button class="btn btn-default" onclick="goTo(4)" style="margin-left:auto;">Review &amp; Send <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>
+        </div>
+      </div>
+      <div class="section" id="section4">
+        <div class="card mb-4"><div class="card-header"><div class="card-title">Review &amp; Send</div><div class="card-description">Confirm details before sending to Content Snare</div></div><div class="card-content" id="finalReview"></div></div>
+        <div id="authNeeded" class="card mb-4"><div class="card-content"><div class="alert alert-amber"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><div><div style="font-weight:600;">Connect Content Snare</div><div class="text-sm mt-2">Authorise your Content Snare account to send document requests directly from this portal.</div><button class="btn btn-default btn-sm mt-3" onclick="startOAuth()">Connect Content Snare →</button></div></div></div></div>
+        <div id="authDone" class="card mb-4 hidden"><div class="card-content"><div class="alert alert-green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg><div><div style="font-weight:600;">Content Snare connected</div><div class="text-sm mt-2">Ready to send document requests.</div></div></div></div></div>
+        <div class="card mb-4"><div class="card-footer" style="padding:1rem 1.5rem;"><button class="btn btn-outline btn-sm" onclick="goTo(3)">← Back</button><button class="btn btn-default btn-lg" id="sendBtn" onclick="sendToContentSnare()" disabled style="margin-left:auto;">Send to Content Snare <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div>
+        <div id="resultCard" class="card hidden"><div class="card-content" id="resultContent"></div></div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- Loading overlay -->
+<div class="overlay" id="loadingOverlay"><div class="overlay-box"><div class="spinner"></div><div style="font-weight:600;" id="loadingText">Loading…</div><div style="font-size:.8125rem;color:var(--muted-foreground);margin-top:4px;" id="loadingSub"></div></div></div>
+
 <script>
-// ── Config ────────────────────────────────────────────────────────────────
-const CS_CLIENT_ID     = 's7FYbJlw7XLmNg_bwKSaWQf-cOsxkbUA9fU4N6zmZPU';
-const CS_CLIENT_SECRET = 'E7REDdUQuLOcPp8uqU2KUPxwnHZgZuQUt7a0WDCsUvc';
-const CS_REDIRECT_URI  = window.location.origin + window.location.pathname;
-const CS_AUTH_URL      = 'https://api.contentsnare.com/oauth/authorization?client_id=' + CS_CLIENT_ID;
-const CS_TOKEN_URL     = 'https://api.contentsnare.com/oauth/token';
-const CS_API           = 'https://api.contentsnare.com/partner_api/v1';
-
-// ── State ─────────────────────────────────────────────────────────────────
-const S = {
-  pdfFile: null, mortgageType: 'residential_purchase',
-  data: null, checkedDocs: new Set(), currentApplicant: 0,
-  apiKey: null, csToken: null
-};
-
-// ── On load: check for OAuth callback code in URL ─────────────────────────
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  if (code) {
-    // Clean URL
-    window.history.replaceState({}, '', window.location.pathname);
-    exchangeCodeForToken(code);
-  }
-  // Restore token from sessionStorage if present
-  const saved = sessionStorage.getItem('cs_token');
-  if (saved) setConnected(saved);
-});
-
-async function exchangeCodeForToken(code) {
-  showLoading('Connecting...', 'Exchanging authorisation code with Content Snare');
-  try {
-    const resp = await fetch(CS_TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: CS_CLIENT_ID,
-        client_secret: CS_CLIENT_SECRET,
-        redirect_uri: CS_REDIRECT_URI,
-        code
-      })
-    });
-    if (!resp.ok) throw new Error('Token exchange failed: ' + resp.status);
-    const d = await resp.json();
-    sessionStorage.setItem('cs_token', d.access_token);
-    setConnected(d.access_token);
-    hideLoading();
-  } catch(e) {
-    hideLoading();
-    alert('Content Snare connection failed: ' + e.message);
-  }
-}
-
-function setConnected(token) {
-  S.csToken = token;
-  document.getElementById('authNeeded').style.display = 'none';
-  document.getElementById('authDone').style.display   = 'flex';
-  document.getElementById('sendBtn').disabled = false;
-  const nav = document.getElementById('navStatus');
-  nav.style.display = 'inline-flex';
-  nav.style.background = 'var(--green-light)';
-  nav.style.color = '#16a34a';
-  nav.style.borderColor = 'rgba(34,197,94,0.25)';
-  nav.textContent = '✓ Content Snare Connected';
-}
-
-function startOAuth() {
-  const url = CS_AUTH_URL + '&redirect_uri=' + encodeURIComponent(CS_REDIRECT_URI) + '&response_type=code';
-  window.location.href = url;
-}
-
-// ── Navigation ────────────────────────────────────────────────────────────
-function goTo(n) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById('section'+n).classList.add('active');
-  document.querySelectorAll('.step-item').forEach((s,i) => {
-    s.classList.remove('active','done');
-    if(i+1<n) s.classList.add('done');
-    if(i+1===n) s.classList.add('active');
-  });
-  if(n===3) buildChecklist();
-  if(n===4) buildReview();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-// ── Upload ────────────────────────────────────────────────────────────────
-const zone = document.getElementById('uploadZone');
-const inp  = document.getElementById('pdfInput');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); if(e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
-inp.addEventListener('change', e => { if(e.target.files[0]) setFile(e.target.files[0]); });
-
-function setFile(f) {
-  if(f.type!=='application/pdf') { document.getElementById('fileStatus').innerHTML='<div class="alert alert-error" style="margin-top:10px;">⚠ Please upload a PDF file</div>'; return; }
-  S.pdfFile = f;
-  document.getElementById('fileStatus').innerHTML = `<div class="file-ready">✓ ${f.name} <span style="opacity:0.6;">(${(f.size/1024).toFixed(0)} KB)</span></div>`;
-  zone.style.borderColor = 'var(--green)';
-  zone.style.background = 'var(--green-light)';
-}
-
-// ── Extraction ────────────────────────────────────────────────────────────
-async function startExtraction() {
-  const err = document.getElementById('step1Error');
-  err.textContent = '';
-  if(!S.pdfFile) { err.textContent = 'Please upload a Trail PDF first.'; return; }
-  S.mortgageType = document.getElementById('mortgageType').value;
-  S.apiKey = document.getElementById('apiKey').value.trim();
-  if(!S.apiKey) { err.textContent = 'Please enter your Anthropic API key.'; return; }
-  showLoading('Reading PDF...','Extracting client data from Trail Statement of Position');
-  try {
-    const b64 = await toBase64(S.pdfFile);
-    S.data = await callClaude(b64);
-    hideLoading();
-    renderSection2();
-    goTo(2);
-  } catch(e) {
-    hideLoading();
-    err.textContent = 'Extraction failed: ' + e.message;
-  }
-}
-
-function toBase64(file) {
-  return new Promise((res,rej) => { const r=new FileReader(); r.onload=e=>res(e.target.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); });
-}
-
-// ── Claude API ────────────────────────────────────────────────────────────
-async function callClaude(b64) {
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'x-api-key': S.apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body:JSON.stringify({
-      model:'claude-sonnet-4-5',
-      max_tokens:1000,
-      messages:[{
-        role:'user',
-        content:[
-          {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
-          {type:'text',text:`Extract client data from this Trail Statement of Position. Return ONLY a single valid JSON object, no markdown, no explanation, no trailing commas.\n\nUse exactly this structure:\n{"applicants":[{"firstName":"","lastName":"","preferredName":"","email":"","phone":"","dob":"","occupation":"","employer":"","employmentType":"","address":""}],"financial":{"monthlyNetIncome":"","monthlyRentalIncome":"","totalMonthlyExpenses":"","totalAssets":"","totalLiabilities":"","netWorth":"","mortgageCount":0,"creditCardCount":0},"isSelfEmployed":false,"hasTrust":false,"hasRentalProperties":false,"rentalPropertyCount":0}\n\nRules: one object per applicant; employmentType is "Self Employed" or "Employed (Wages)" or "Employed (Salary)"; isSelfEmployed true if ANY applicant self-employed; hasTrust true if trust mentioned; rentalPropertyCount is an integer; mortgageCount and creditCardCount are integers; all strings must be safe JSON.`}
-        ]
-      }]
-    })
-  });
-  if(!resp.ok) {
-    const errBody = await resp.text();
-    let msg = 'API '+resp.status;
-    try { const j = JSON.parse(errBody); msg = j.error?.message || msg; } catch(e){}
-    throw new Error(msg);
-  }
-  const d = await resp.json();
-  const raw = d.content.find(b=>b.type==='text')?.text||'';
-  const m = raw.match(/\{[\s\S]*\}/);
-  if(!m) throw new Error('No JSON in response');
-  const clean = m[0].replace(/,\s*}/g,'}').replace(/,\s*]/g,']').trim();
-  try { return JSON.parse(clean); } catch(e) { throw new Error('Could not parse response — please try again'); }
-}
-
-// ── Section 2 ─────────────────────────────────────────────────────────────
-const AV_COLORS = ['av-pink','av-blue','av-teal'];
-
-function renderSection2() {
-  const d = S.data;
-  document.getElementById('applTabs').innerHTML = d.applicants.map((a,i)=>
-    `<div class="appl-tab ${i===0?'active':''}" onclick="switchApplicant(${i})" id="atab${i}">${a.firstName} ${a.lastName}</div>`
-  ).join('');
-  showApplicant(0);
-  const f = d.financial;
-  document.getElementById('finData').innerHTML = `
-    <div class="data-grid">
-      <div class="dc"><div class="dc-label">Monthly Net Income</div><div class="dc-value green">${f.monthlyNetIncome||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Monthly Rental Income</div><div class="dc-value">${f.monthlyRentalIncome||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Total Monthly Expenses</div><div class="dc-value">${f.totalMonthlyExpenses||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Net Worth</div><div class="dc-value accent">${f.netWorth||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Total Assets</div><div class="dc-value">${f.totalAssets||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Total Liabilities</div><div class="dc-value">${f.totalLiabilities||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Existing Mortgages</div><div class="dc-value">${f.mortgageCount||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Credit Cards</div><div class="dc-value">${f.creditCardCount||'—'}</div></div>
-    </div>`;
-  const flags = [];
-  if(d.isSelfEmployed) flags.push('Self Employed');
-  if(d.hasTrust) flags.push('Trust Structure');
-  if(d.hasRentalProperties) flags.push(d.rentalPropertyCount+' Rental Properties');
-  document.getElementById('flagsRow').innerHTML = flags.map(t=>`<div class="flag-tag">● ${t}</div>`).join('');
-}
-
-function switchApplicant(i) {
-  S.currentApplicant = i;
-  document.querySelectorAll('.appl-tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));
-  showApplicant(i);
-}
-
-function showApplicant(i) {
-  const a = S.data.applicants[i];
-  const init = (a.firstName[0]||'')+(a.lastName[0]||'');
-  document.getElementById('applData').innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-      <div class="av ${AV_COLORS[i%AV_COLORS.length]}" style="width:40px;height:40px;font-size:15px;">${init}</div>
-      <div>
-        <div style="font-weight:600;font-size:14px;">${a.firstName} ${a.lastName}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${a.occupation||''} · ${a.employer||''}</div>
-      </div>
-    </div>
-    <div class="data-grid">
-      <div class="dc"><div class="dc-label">Email</div><div class="dc-value">${a.email||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Phone</div><div class="dc-value">${a.phone||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Date of Birth</div><div class="dc-value">${a.dob||'—'}</div></div>
-      <div class="dc"><div class="dc-label">Employment Type</div><div class="dc-value">${a.employmentType||'—'}</div></div>
-      <div class="dc full"><div class="dc-label">Address</div><div class="dc-value">${a.address||'—'}</div></div>
-    </div>`;
-}
-
-// ── Documents ─────────────────────────────────────────────────────────────
-function getDocs() {
-  const d = S.data; const mt = S.mortgageType; const list = [];
-  const add = (sec,name,desc,req,id) => list.push({sec,name,desc,req,id});
-  add('Identity','Proof of Identity','Passport or Driver\'s Licence — certified copy',true,'id_doc');
-  add('Identity','Proof of Address','Utility bill or bank statement within 3 months',true,'proof_addr');
-  if(d.isSelfEmployed) {
-    add('Income — Self Employed','Financial Statements (Last 2 Years)','Full business financials signed by accountant',true,'fin_stmts');
-    add('Income — Self Employed','Personal Tax Returns — IR3 (Last 2 Years)','Filed with Inland Revenue',true,'ir3');
-    add('Income — Self Employed','Business Tax Returns (Last 2 Years)','Company or partnership returns',true,'biz_tax');
-    add('Income — Self Employed','Business Bank Statements (Last 3 Months)','Main operating account',true,'biz_bank');
-    add('Income — Self Employed','Accountant Confirmation Letter','Confirming ongoing trading and income',false,'acct_letter');
-  }
-  if(d.applicants.some(a=>a.employmentType?.toLowerCase().includes('wage')||a.employmentType?.toLowerCase().includes('salary'))) {
-    add('Income — Employed','Last 3 Months Payslips','For each PAYE applicant',true,'payslips');
-    add('Income — Employed','Employment Contract or Letter','Confirming permanent status and salary',false,'emp_contract');
-  }
-  add('Bank Statements','Personal Bank Statements (Last 3 Months)','All main accounts including savings',true,'pers_bank');
-  add('Bank Statements','Statements for Living Expense Accounts','Any account regular expenses come from',true,'living_bank');
-  if(mt==='residential_purchase') {
-    add('Property — Purchase','Sale & Purchase Agreement','Signed copy including all conditions',true,'spa');
-    add('Property — Purchase','Evidence of Deposit','Bank statement or KiwiSaver balance showing deposit',true,'deposit');
-    add('Property — Purchase','KiwiSaver First Home Withdrawal Letter','If using KiwiSaver for deposit',false,'ks_withdraw');
-    add('Property — Purchase','Building Report / LIM Report','If obtained',false,'lim');
-  }
-  if(mt==='remortgage') {
-    add('Property — Remortgage','Current Mortgage Statements (Last 3 Months)','For all mortgages being refinanced',true,'curr_mort');
-    add('Property — Remortgage','Property Rates Notice','Current council rates invoice',true,'rates');
-    add('Property — Remortgage','Recent Valuation or Evidence of Equity','Registered valuation or recent CV',false,'valuation');
-  }
-  if(d.hasTrust) {
-    add('Trust / Company','Trust Deed','Full executed trust deed including variations',true,'trust_deed');
-    add('Trust / Company','Certificate of Title — Trust Properties','For each property held in trust',true,'title');
-    add('Trust / Company','Trust Tax Returns (Last 2 Years)','Filed IR6',true,'trust_tax');
-    add('Trust / Company','Trust Bank Statements (Last 3 Months)','Main trust operating account',false,'trust_bank');
-  }
-  if(d.hasRentalProperties) {
-    add('Rental Properties','Tenancy Agreements','Current signed agreements for all rentals',true,'tenancy');
-    add('Rental Properties','Rental Income Evidence (Last 3 Months)','Rental or property manager statements',true,'rental_inc');
-    add('Rental Properties','Rental Property Insurance Certificates','For all investment properties',false,'rental_ins');
-    if(d.rentalPropertyCount>1) add('Rental Properties','Schedule of Properties','Summary of all rentals, values and mortgages',false,'prop_sched');
-  }
-  add('Existing Liabilities','Statements for All Existing Mortgages','Last statement for each mortgage account',true,'exist_mort');
-  add('Existing Liabilities','Credit Card Statements (Last 3 Months)','For all cards listed in the fact find',true,'cc_stmts');
-  return list;
-}
-
-function buildChecklist() {
-  const docs = getDocs(); const d = S.data;
-  docs.forEach(doc => { if(doc.req) S.checkedDocs.add(doc.id); });
-  const sections = {};
-  docs.forEach(doc => { if(!sections[doc.sec]) sections[doc.sec]=[]; sections[doc.sec].push(doc); });
-  const today = new Date().toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});
-  let html = '';
-  Object.entries(sections).forEach(([sec,items]) => {
-    const sel = items.filter(i=>S.checkedDocs.has(i.id)).length;
-    html += `<div class="doc-section-hdr"><span>${sec}</span><span>${sel}/${items.length}</span></div>`;
-    items.forEach(doc => {
-      const on = S.checkedDocs.has(doc.id);
-      const avatars = d.applicants.map((a,i)=>{
-        const init=(a.firstName[0]||'')+(a.lastName[0]||'');
-        return `<div class="av ${AV_COLORS[i%AV_COLORS.length]}" title="${a.firstName} ${a.lastName}" style="margin-left:-6px;">${init}</div>`;
-      }).join('');
-      const names = d.applicants.map(a=>a.firstName+' '+a.lastName).join(', ');
-      html += `<div class="doc-row ${on?'':'off'}" id="row_${doc.id}" onclick="toggleDoc('${doc.id}')">
-        <div class="doc-file-icon">${on?'📄':'○'}</div>
-        <div class="doc-main">
-          <div class="doc-name">${doc.name}</div>
-          <div class="doc-meta"><span>0/0 files</span><span class="meta-dot"></span><span>${today}</span><span class="meta-dot"></span><span>0 comments</span></div>
-        </div>
-        <div class="doc-right">
-          <div style="display:flex;margin-right:2px;">${avatars}</div>
-          <span class="av-name">${names}</span>
-          <span class="sp ${doc.req?'sp-req':'sp-opt'}">${doc.req?'Required':'Optional'}</span>
-          <span style="font-size:14px;color:var(--text-muted);">↺</span>
-          <div class="icon-btn">⋯</div>
-        </div>
-      </div>`;
-    });
-  });
-  document.getElementById('docList').innerHTML = html;
-  document.getElementById('summaryStrip').innerHTML = `
-    <div class="ss-item"><div class="ss-label">Applicants</div><div class="ss-value">${d.applicants.length}</div></div>
-    <div class="ss-item"><div class="ss-label">Type</div><div class="ss-value" style="font-size:13px;">${S.mortgageType==='remortgage'?'Remortgage':'Purchase'}</div></div>
-    <div class="ss-item"><div class="ss-label">Self Employed</div><div class="ss-value" style="font-size:13px;">${d.isSelfEmployed?'Yes':'No'}</div></div>
-    <div class="ss-item"><div class="ss-label">Trust</div><div class="ss-value" style="font-size:13px;">${d.hasTrust?'Yes':'No'}</div></div>
-    <div class="ss-item"><div class="ss-label">Rentals</div><div class="ss-value pink">${d.rentalPropertyCount||0}</div></div>`;
-  updateCount();
-}
-
-function toggleDoc(id) {
-  if(S.checkedDocs.has(id)) {
-    S.checkedDocs.delete(id);
-    const row = document.getElementById('row_'+id);
-    if(row){ row.classList.add('off'); row.querySelector('.doc-file-icon').textContent='○'; }
-  } else {
-    S.checkedDocs.add(id);
-    const row = document.getElementById('row_'+id);
-    if(row){ row.classList.remove('off'); row.querySelector('.doc-file-icon').textContent='📄'; }
-  }
-  updateCount(); buildChecklistHeaders();
-}
-
-function buildChecklistHeaders() {
-  const docs = getDocs(); const sections = {};
-  docs.forEach(doc => { if(!sections[doc.sec]) sections[doc.sec]=[]; sections[doc.sec].push(doc); });
-  Object.entries(sections).forEach(([sec,items]) => {
-    const sel = items.filter(i=>S.checkedDocs.has(i.id)).length;
-    document.querySelectorAll('.doc-section-hdr').forEach(h => {
-      if(h.querySelector('span')?.textContent===sec) h.querySelector('span:last-child').textContent=`${sel}/${items.length}`;
-    });
-  });
-}
-
-function updateCount() {
-  const el = document.getElementById('docCountLabel');
-  if(el) el.textContent = S.checkedDocs.size+' selected';
-}
-
-// ── Review ────────────────────────────────────────────────────────────────
-function buildReview() {
-  const d = S.data;
-  const docs = getDocs().filter(doc=>S.checkedDocs.has(doc.id));
-  const applRows = d.applicants.map((a,i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-light);">
-      <div class="av ${AV_COLORS[i%AV_COLORS.length]}" style="width:36px;height:36px;font-size:13px;">${(a.firstName[0]||'')+(a.lastName[0]||'')}</div>
-      <div style="flex:1;">
-        <div style="font-weight:600;font-size:13px;">${a.firstName} ${a.lastName}</div>
-        <div style="font-size:12px;color:var(--text-muted);">${a.email} · ${a.phone}</div>
-      </div>
-      <span class="sp sp-requested">${a.employmentType||'—'}</span>
-    </div>`).join('');
-  document.getElementById('finalReview').innerHTML = `
-    <div class="review-block"><div class="review-block-title">Applicants</div>${applRows}</div>
-    <div class="review-block" style="margin-top:16px;">
-      <div class="review-block-title">${docs.length} Documents to Request</div>
-      <div class="doc-pills">${docs.map(d=>`<span class="doc-pill">${d.name}</span>`).join('')}</div>
-    </div>
-    <div class="review-block" style="margin-top:16px;">
-      <div class="data-grid">
-        <div class="dc"><div class="dc-label">Mortgage Type</div><div class="dc-value">${S.mortgageType==='remortgage'?'Remortgage':'Residential Purchase'}</div></div>
-        <div class="dc"><div class="dc-label">Due Date</div><div class="dc-value">${new Date(Date.now()+7*86400000).toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'})}</div></div>
-      </div>
-    </div>`;
-}
-
-// ── Send to Content Snare ─────────────────────────────────────────────────
-async function sendToContentSnare() {
-  const btn = document.getElementById('sendBtn');
-  btn.disabled = true; btn.textContent = 'Sending...';
-  showLoading('Sending to Content Snare...', 'Creating clients and document request');
-
-  const d = S.data;
-  const docs = getDocs().filter(doc=>S.checkedDocs.has(doc.id));
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + S.csToken
-  };
-
-  try {
-    // 1. Create or find a client for each applicant
-    const clientIds = [];
-    for (const a of d.applicants) {
-      const cr = await fetch(CS_API + '/clients', {
-        method: 'POST', headers,
-        body: JSON.stringify({
-          name: a.firstName + ' ' + a.lastName,
-          email: a.email,
-          phone: a.phone || undefined
-        })
-      });
-      if (!cr.ok) throw new Error('Failed to create client: ' + cr.status + ' ' + await cr.text());
-      const cd = await cr.json();
-      clientIds.push(cd.id);
-    }
-
-    // 2. Build sections from selected docs
-    const secMap = {};
-    docs.forEach(doc => {
-      if(!secMap[doc.sec]) secMap[doc.sec] = [];
-      secMap[doc.sec].push({ name: doc.name, description: doc.desc });
-    });
-
-    // 3. Create the document request
-    const reqName = `${d.applicants.map(a=>a.firstName).join(' & ')} — ${S.mortgageType==='remortgage'?'Remortgage':'Purchase'} — Document Request`;
-    const rr = await fetch(CS_API + '/requests', {
-      method: 'POST', headers,
-      body: JSON.stringify({
-        name: reqName,
-        client_ids: clientIds,
-        due_date: new Date(Date.now()+7*86400000).toISOString().split('T')[0],
-        sections: Object.entries(secMap).map(([title, items]) => ({
-          title,
-          fields: items.map(i => ({ label: i.name, description: i.description, type: 'file' }))
-        }))
-      })
-    });
-    if (!rr.ok) throw new Error('Failed to create request: ' + rr.status + ' ' + await rr.text());
-    const rd = await rr.json();
-
-    hideLoading();
-    const rc = document.getElementById('resultCard');
-    rc.style.display = 'block';
-    document.getElementById('resultContent').innerHTML = `
-      <div class="alert alert-success">✅ <strong>Sent successfully!</strong> — ${docs.length} documents requested across ${Object.keys(secMap).length} sections.</div>
-      <div style="margin-top:16px;">
-        <div class="data-grid">
-          <div class="dc"><div class="dc-label">Client(s)</div><div class="dc-value">${d.applicants.map(a=>a.firstName+' '+a.lastName).join(', ')}</div></div>
-          <div class="dc"><div class="dc-label">Documents</div><div class="dc-value accent">${docs.length} items</div></div>
-          <div class="dc full"><div class="dc-label">Request Name</div><div class="dc-value">${reqName}</div></div>
-          ${rd.id ? `<div class="dc full"><div class="dc-label">Content Snare Request ID</div><div class="dc-value" style="font-family:monospace;font-size:12px;">${rd.id}</div></div>` : ''}
-        </div>
-      </div>
-      <div class="alert alert-info" style="margin-top:14px;">
-        <span>ℹ️</span>
-        <div>Check your <strong>Content Snare Requests</strong> tab — the client portal link will be there ready to send to ${d.applicants.map(a=>a.firstName).join(' & ')}.</div>
-      </div>`;
-
-    btn.textContent = '✓ Sent';
-    rc.scrollIntoView({behavior:'smooth'});
-
-  } catch(e) {
-    hideLoading();
-    btn.disabled = false; btn.textContent = 'Send to Content Snare →';
-    const rc = document.getElementById('resultCard');
-    rc.style.display = 'block';
-    document.getElementById('resultContent').innerHTML = `<div class="alert alert-error">❌ <strong>Error:</strong> ${e.message}</div>`;
-  }
-}
-
-function showLoading(t,s) { document.getElementById('loadingText').textContent=t; document.getElementById('loadingSub').textContent=s; document.getElementById('loadingOverlay').classList.add('active'); }
-function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
+const XANO_BASE='https://xxgk-ehxz-nx2m.a2.xano.io/api:WEOgB9UF';
+const XANO_LOGIN=XANO_BASE+'/auth/login',XANO_EXTRACT=XANO_BASE+'/portal/extract-pdf',XANO_SETTINGS_GET=XANO_BASE+'/portal/settings',XANO_SETTINGS_POST=XANO_BASE+'/portal/settings';
+const CS_AUTH_URL='https://api.contentsnare.com/oauth/authorization',CS_TOKEN_URL='https://api.contentsnare.com/oauth/token',CS_API='https://api.contentsnare.com/partner_api/v1';
+const CS_REDIRECT_URI=window.location.origin+window.location.pathname;
+const S={authToken:sessionStorage.getItem('auth_token')||null,csToken:sessionStorage.getItem('cs_token')||null,pdfFile:null,mortgageType:'residential_purchase',data:null,checkedDocs:new Set(),currentApplicant:0,csClientId:null,csClientSecret:null};
+const AV_COLORS=['av-zinc','av-blue','av-violet','av-rose'];
+window.addEventListener('load',async()=>{const p=new URLSearchParams(window.location.search),code=p.get('code');if(code){history.replaceState({},'',window.location.pathname);if(S.authToken){showApp();goTo(4);await exchangeCodeForToken(code);return;}}if(S.authToken){showApp();await loadSettings();}});
+function showApp(){document.getElementById('loginScreen').style.display='none';document.getElementById('appShell').classList.remove('hidden');if(S.csToken)updateCsNavPill(true);const n=localStorage.getItem('advisor_name');if(n)document.getElementById('settingsAdvisorName').value=n;const d=localStorage.getItem('due_days');if(d)document.getElementById('settingsDefaultDueDays').value=d;}
+async function doLogin(){const email=document.getElementById('loginEmail').value.trim(),pass=document.getElementById('loginPassword').value,err=document.getElementById('loginError');err.classList.add('hidden');if(!email||!pass){err.textContent='Please enter your email and password.';err.classList.remove('hidden');return;}showLoading('Signing in…','');try{const resp=await fetch(XANO_LOGIN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});if(!resp.ok)throw new Error();const d=await resp.json();const token=d.authToken||d.auth_token||d.token;if(!token)throw new Error();sessionStorage.setItem('auth_token',token);S.authToken=token;hideLoading();showApp();await loadSettings();}catch(e){hideLoading();err.textContent='Invalid email or password.';err.classList.remove('hidden');}}
+function doLogout(){sessionStorage.clear();location.reload();}
+function authHeaders(){return{'Content-Type':'application/json','Authorization':'Bearer '+S.authToken};}
+async function loadSettings(){try{const r=await fetch(XANO_SETTINGS_GET,{headers:authHeaders()});if(!r.ok)return;const d=await r.json();if(d.cs_client_id){S.csClientId=d.cs_client_id;document.getElementById('settingsCsClientId').value=d.cs_client_id;}if(d.cs_client_secret)S.csClientSecret=d.cs_client_secret;setStatusBadge('anthropicStatus',!!d.has_anthropic_key,'Configured ✓','Not configured');setStatusBadge('csConfigStatus',!!(d.cs_client_id&&d.cs_client_secret),'Configured ✓','Not configured');}catch(e){console.warn('Settings load failed',e);}}
+function setStatusBadge(id,ok,yes,no){const el=document.getElementById(id);if(!el)return;el.textContent=ok?yes:no;el.className='badge '+(ok?'badge-green':'badge-outline');}
+function showSettings(){document.getElementById('mainPortal').classList.add('hidden');document.getElementById('settingsPanel').classList.remove('hidden');document.getElementById('navPageTitle').textContent='Settings';loadSettings();}
+function hideSettings(){document.getElementById('settingsPanel').classList.add('hidden');document.getElementById('mainPortal').classList.remove('hidden');document.getElementById('navPageTitle').textContent='Document Portal';}
+function showSettingsTab(tab,el){document.querySelectorAll('[id^="settingsTab-"]').forEach(e=>e.classList.add('hidden'));document.getElementById('settingsTab-'+tab).classList.remove('hidden');document.querySelectorAll('.settings-nav-item').forEach(e=>e.classList.remove('active'));if(el)el.classList.add('active');}
+async function saveAnthropicKey(){const key=document.getElementById('settingsAnthropicKey').value.trim();if(!key)return;const msg=document.getElementById('anthropicSaveMsg');try{const r=await fetch(XANO_SETTINGS_POST,{method:'POST',headers:authHeaders(),body:JSON.stringify({anthropic_api_key:key})});if(!r.ok)throw new Error();document.getElementById('settingsAnthropicKey').value='';setStatusBadge('anthropicStatus',true,'Configured ✓','');showMsg(msg,'Saved successfully');}catch(e){showMsg(msg,'Save failed — try again');}}
+async function saveCsCredentials(){const id=document.getElementById('settingsCsClientId').value.trim(),secret=document.getElementById('settingsCsClientSecret').value.trim();if(!id&&!secret)return;const msg=document.getElementById('csSaveMsg');try{const body={};if(id)body.cs_client_id=id;if(secret)body.cs_client_secret=secret;const r=await fetch(XANO_SETTINGS_POST,{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});if(!r.ok)throw new Error();if(id)S.csClientId=id;if(secret)S.csClientSecret=secret;setStatusBadge('csConfigStatus',true,'Configured ✓','');showMsg(msg,'Saved successfully');}catch(e){showMsg(msg,'Save failed — try again');}}
+function saveProfile(){localStorage.setItem('advisor_name',document.getElementById('settingsAdvisorName').value.trim());localStorage.setItem('due_days',document.getElementById('settingsDefaultDueDays').value.trim()||'7');showMsg(document.getElementById('profileSaveMsg'),'Saved successfully');}
+function showMsg(el,txt){el.textContent=txt;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),3000);}
+async function exchangeCodeForToken(code){if(!S.csClientId||!S.csClientSecret)await loadSettings();showLoading('Connecting…','Exchanging authorisation code with Content Snare');try{const r=await fetch(CS_TOKEN_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:S.csClientId,client_secret:S.csClientSecret,redirect_uri:CS_REDIRECT_URI,code})});if(!r.ok)throw new Error('Token exchange failed: '+r.status);const d=await r.json();sessionStorage.setItem('cs_token',d.access_token);setConnected(d.access_token);hideLoading();}catch(e){hideLoading();alert('Content Snare connection failed: '+e.message);}}
+function setConnected(token){S.csToken=token;document.getElementById('authNeeded').classList.add('hidden');document.getElementById('authDone').classList.remove('hidden');document.getElementById('sendBtn').disabled=false;updateCsNavPill(true);}
+function updateCsNavPill(connected){const p=document.getElementById('csStatusPill');p.classList.remove('hidden');p.className='badge '+(connected?'badge-green':'badge-outline');p.textContent=connected?'✓ Content Snare':'Content Snare';}
+function startOAuth(){if(!S.csClientId){alert('Please configure your Content Snare credentials in Settings first.');return;}window.location.href=CS_AUTH_URL+'?client_id='+encodeURIComponent(S.csClientId)+'&redirect_uri='+encodeURIComponent(CS_REDIRECT_URI)+'&response_type=code';}
+function goTo(n){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('section'+n).classList.add('active');['si1','si2','si3','si4'].forEach((id,i)=>{const el=document.getElementById(id);el.classList.remove('active','done');if(i+1<n)el.classList.add('done');else if(i+1===n)el.classList.add('active');});['sc1','sc2','sc3'].forEach((id,i)=>document.getElementById(id).classList.toggle('done',i+1<n));if(n===3)buildChecklist();if(n===4)buildReview();window.scrollTo({top:0,behavior:'smooth'});}
+const zone=document.getElementById('uploadZone'),inp=document.getElementById('pdfInput');
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0]);});inp.addEventListener('change',e=>{if(e.target.files[0])setFile(e.target.files[0]);});
+function setFile(f){if(f.type!=='application/pdf'){document.getElementById('fileStatus').innerHTML='<div class="alert alert-destructive mt-3">Please upload a PDF file.</div>';return;}S.pdfFile=f;document.getElementById('fileStatus').innerHTML='<div class="alert alert-green mt-3"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg><span><strong>'+f.name+'</strong> — '+(f.size/1024).toFixed(0)+' KB</span></div>';zone.style.borderColor='var(--green)';zone.style.background='var(--green-light)';}
+async function startExtraction(){const err=document.getElementById('step1Error');err.textContent='';if(!S.pdfFile){err.textContent='Please upload a Trail PDF first.';return;}S.mortgageType=document.getElementById('mortgageType').value;showLoading('Reading PDF…','Extracting client data from Trail Statement of Position');try{const b64=await toBase64(S.pdfFile);const resp=await fetch(XANO_EXTRACT,{method:'POST',headers:authHeaders(),body:JSON.stringify({pdf_base64:b64,mortgage_type:S.mortgageType})});if(!resp.ok)throw new Error('Extraction failed ('+resp.status+'): '+await resp.text());const outer=await resp.json();const raw=outer?.content?.find?.(b=>b.type==='text')?.text||(typeof outer==='string'?outer:JSON.stringify(outer));const m=raw.match(/{[sS]*}/);if(!m)throw new Error('No JSON in response');S.data=JSON.parse(m[0].replace(/,s*}/g,'}').replace(/,s*]/g,']').trim());hideLoading();renderSection2();goTo(2);}catch(e){hideLoading();err.textContent=e.message;}}
+function toBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+function renderSection2(){const d=S.data;document.getElementById('applTabs').innerHTML=d.applicants.map((a,i)=>'<div class="tab '+(i===0?'active':'')+'" onclick="switchApplicant('+i+',this)">'+a.firstName+' '+a.lastName+'</div>').join('');showApplicant(0);const f=d.financial;document.getElementById('finData').innerHTML='<div class="data-grid"><div class="dc"><div class="dc-label">Monthly Net Income</div><div class="dc-value green">'+(f.monthlyNetIncome||'—')+'</div></div><div class="dc"><div class="dc-label">Monthly Rental Income</div><div class="dc-value">'+(f.monthlyRentalIncome||'—')+'</div></div><div class="dc"><div class="dc-label">Total Monthly Expenses</div><div class="dc-value">'+(f.totalMonthlyExpenses||'—')+'</div></div><div class="dc"><div class="dc-label">Net Worth</div><div class="dc-value blue">'+(f.netWorth||'—')+'</div></div><div class="dc"><div class="dc-label">Total Assets</div><div class="dc-value">'+(f.totalAssets||'—')+'</div></div><div class="dc"><div class="dc-label">Total Liabilities</div><div class="dc-value">'+(f.totalLiabilities||'—')+'</div></div><div class="dc"><div class="dc-label">Existing Mortgages</div><div class="dc-value">'+(f.mortgageCount||'—')+'</div></div><div class="dc"><div class="dc-label">Credit Cards</div><div class="dc-value">'+(f.creditCardCount||'—')+'</div></div></div>';const flags=[];if(d.isSelfEmployed)flags.push(['Self Employed','badge-amber']);if(d.hasTrust)flags.push(['Trust Structure','badge-blue']);if(d.hasRentalProperties)flags.push([d.rentalPropertyCount+' Rental Propert'+(d.rentalPropertyCount===1?'y':'ies'),'badge-secondary']);document.getElementById('flagsRow').innerHTML=flags.length?flags.map(([t,c])=>'<span class="badge '+c+'">'+t+'</span>').join(''):'<span class="text-sm text-muted">No additional flags detected.</span>';}
+function switchApplicant(i,el){document.querySelectorAll('#applTabs .tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');showApplicant(i);}
+function showApplicant(i){const a=S.data.applicants[i];const init=(a.firstName?.[0]||'')+(a.lastName?.[0]||'');document.getElementById('applData').innerHTML='<div class="flex items-center gap-3 mb-4"><div class="av av-lg '+AV_COLORS[i%AV_COLORS.length]+'">'+init+'</div><div style="flex:1;"><div style="font-weight:600;">'+a.firstName+' '+a.lastName+(a.preferredName?' <span class="text-muted" style="font-weight:400;">('+a.preferredName+')</span>':'')+'</div><div class="text-sm text-muted">'+([a.occupation,a.employer].filter(Boolean).join(' · ')||'—')+'</div></div><span class="badge badge-secondary">'+(a.employmentType||'—')+'</span></div><div class="data-grid"><div class="dc"><div class="dc-label">Email</div><div class="dc-value text-sm">'+(a.email||'—')+'</div></div><div class="dc"><div class="dc-label">Phone</div><div class="dc-value text-sm">'+(a.phone||'—')+'</div></div><div class="dc"><div class="dc-label">Date of Birth</div><div class="dc-value text-sm">'+(a.dob||'—')+'</div></div><div class="dc"><div class="dc-label">Employment</div><div class="dc-value text-sm">'+(a.employmentType||'—')+'</div></div><div class="dc full"><div class="dc-label">Address</div><div class="dc-value text-sm">'+(a.address||'—')+'</div></div></div>';}
+function getDocs(){const d=S.data,mt=S.mortgageType,list=[];const add=(sec,name,desc,req,id)=>list.push({sec,name,desc,req,id});add('Identity','Proof of Identity',"Passport or Driver's Licence — certified copy",true,'id_doc');add('Identity','Proof of Address','Utility bill or bank statement within 3 months',true,'proof_addr');if(d.isSelfEmployed){add('Income — Self Employed','Financial Statements (Last 2 Years)','Full business financials signed by accountant',true,'fin_stmts');add('Income — Self Employed','Personal Tax Returns — IR3 (Last 2 Years)','Filed with Inland Revenue',true,'ir3');add('Income — Self Employed','Business Tax Returns (Last 2 Years)','Company or partnership returns',true,'biz_tax');add('Income — Self Employed','Business Bank Statements (Last 3 Months)','Main operating account',true,'biz_bank');add('Income — Self Employed','Accountant Confirmation Letter','Confirming ongoing trading and income',false,'acct_letter');}if(d.applicants.some(a=>a.employmentType?.toLowerCase().includes('wage')||a.employmentType?.toLowerCase().includes('salary'))){add('Income — Employed','Last 3 Months Payslips','For each PAYE applicant',true,'payslips');add('Income — Employed','Employment Contract or Letter','Confirming permanent status and salary',false,'emp_contract');}add('Bank Statements','Personal Bank Statements (Last 3 Months)','All main accounts including savings',true,'pers_bank');add('Bank Statements','Statements for Living Expense Accounts','Any account regular expenses come from',true,'living_bank');if(mt==='residential_purchase'){add('Property — Purchase','Sale & Purchase Agreement','Signed copy including all conditions',true,'spa');add('Property — Purchase','Evidence of Deposit','Bank statement or KiwiSaver balance showing deposit',true,'deposit');add('Property — Purchase','KiwiSaver First Home Withdrawal Letter','If using KiwiSaver for deposit',false,'ks_withdraw');add('Property — Purchase','Building Report / LIM Report','If obtained',false,'lim');}if(mt==='remortgage'){add('Property — Remortgage','Current Mortgage Statements (Last 3 Months)','For all mortgages being refinanced',true,'curr_mort');add('Property — Remortgage','Property Rates Notice','Current council rates invoice',true,'rates');add('Property — Remortgage','Recent Valuation or Evidence of Equity','Registered valuation or recent CV',false,'valuation');}if(d.hasTrust){add('Trust / Company','Trust Deed','Full executed trust deed including variations',true,'trust_deed');add('Trust / Company','Certificate of Title — Trust Properties','For each property held in trust',true,'title');add('Trust / Company','Trust Tax Returns (Last 2 Years)','Filed IR6',true,'trust_tax');add('Trust / Company','Trust Bank Statements (Last 3 Months)','Main trust operating account',false,'trust_bank');}if(d.hasRentalProperties){add('Rental Properties','Tenancy Agreements','Current signed agreements for all rentals',true,'tenancy');add('Rental Properties','Rental Income Evidence (Last 3 Months)','Rental or property manager statements',true,'rental_inc');add('Rental Properties','Rental Property Insurance Certificates','For all investment properties',false,'rental_ins');if(d.rentalPropertyCount>1)add('Rental Properties','Schedule of Properties','Summary of all rentals, values and mortgages',false,'prop_sched');}add('Existing Liabilities','Statements for All Existing Mortgages','Last statement for each mortgage account',true,'exist_mort');add('Existing Liabilities','Credit Card Statements (Last 3 Months)','For all cards listed in the fact find',true,'cc_stmts');return list;}
+function buildChecklist(){const docs=getDocs(),d=S.data;docs.forEach(doc=>{if(doc.req)S.checkedDocs.add(doc.id);});const sections={};docs.forEach(doc=>{if(!sections[doc.sec])sections[doc.sec]=[];sections[doc.sec].push(doc);});let html='';Object.entries(sections).forEach(([sec,items])=>{const sel=items.filter(i=>S.checkedDocs.has(i.id)).length;html+='<div class="section-header" id="sh_'+sec.replace(/W/g,'_')+'"><span>'+sec+'</span><span class="badge badge-secondary">'+sel+'/'+items.length+'</span></div>';items.forEach(doc=>{const on=S.checkedDocs.has(doc.id);const avatars=d.applicants.map((a,i)=>'<div class="av av-sm '+AV_COLORS[i%AV_COLORS.length]+'" title="'+a.firstName+' '+a.lastName+'">'+(a.firstName?.[0]||'')+(a.lastName?.[0]||'')+'</div>').join('');html+='<div class="doc-row '+(on?'':'unchecked')+'" id="row_'+doc.id+'" onclick="toggleDoc(''+doc.id+'')"><div class="doc-check">'+(on?'✓':'')+'</div><div class="doc-main"><div class="doc-name">'+doc.name+'</div><div class="doc-desc">'+doc.desc+'</div></div><div class="doc-right"><div class="av-stack">'+avatars+'</div><span class="badge '+(doc.req?'badge-blue':'badge-outline')+'">'+(doc.req?'Required':'Optional')+'</span></div></div>';});});document.getElementById('docList').innerHTML=html;document.getElementById('summaryStrip').innerHTML='<div class="ss-item"><div class="ss-label">Applicants</div><div class="ss-value">'+d.applicants.length+'</div></div><div class="ss-item"><div class="ss-label">Type</div><div class="ss-value" style="font-size:.875rem;">'+(S.mortgageType==='remortgage'?'Remortgage':'Purchase')+'</div></div><div class="ss-item"><div class="ss-label">Self Employed</div><div class="ss-value" style="font-size:.875rem;">'+(d.isSelfEmployed?'Yes':'No')+'</div></div><div class="ss-item"><div class="ss-label">Trust</div><div class="ss-value" style="font-size:.875rem;">'+(d.hasTrust?'Yes':'No')+'</div></div><div class="ss-item"><div class="ss-label">Rentals</div><div class="ss-value">'+(d.rentalPropertyCount||0)+'</div></div>';updateCount();}
+function toggleDoc(id){const row=document.getElementById('row_'+id);if(S.checkedDocs.has(id)){S.checkedDocs.delete(id);row?.classList.add('unchecked');if(row)row.querySelector('.doc-check').textContent='';}else{S.checkedDocs.add(id);row?.classList.remove('unchecked');if(row)row.querySelector('.doc-check').textContent='✓';}updateCount();updateSectionHeaders();}
+function updateSectionHeaders(){const docs=getDocs(),sections={};docs.forEach(doc=>{if(!sections[doc.sec])sections[doc.sec]=[];sections[doc.sec].push(doc);});Object.entries(sections).forEach(([sec,items])=>{const el=document.getElementById('sh_'+sec.replace(/W/g,'_'));if(el)el.querySelector('.badge').textContent=items.filter(i=>S.checkedDocs.has(i.id)).length+'/'+items.length;});}
+function updateCount(){const el=document.getElementById('docCountLabel');if(el)el.textContent=S.checkedDocs.size+' selected';}
+function buildReview(){const d=S.data,docs=getDocs().filter(doc=>S.checkedDocs.has(doc.id)),dueDays=parseInt(localStorage.getItem('due_days')||'7'),dueDate=new Date(Date.now()+dueDays*86400000).toLocaleDateString('en-NZ',{day:'numeric',month:'short',year:'numeric'});document.getElementById('finalReview').innerHTML='<div style="margin-bottom:1rem;"><div class="text-sm text-muted font-semibold mb-3" style="text-transform:uppercase;letter-spacing:.05em;">Applicants</div>'+d.applicants.map((a,i)=>'<div class="flex items-center gap-3" style="padding:.625rem 0;border-bottom:1px solid var(--border);"><div class="av '+AV_COLORS[i%AV_COLORS.length]+'">'+(a.firstName?.[0]||'')+(a.lastName?.[0]||'')+'</div><div style="flex:1;"><div style="font-weight:600;font-size:.875rem;">'+a.firstName+' '+a.lastName+'</div><div class="text-sm text-muted">'+([a.email,a.phone].filter(Boolean).join(' · ')||'—')+'</div></div><span class="badge badge-secondary">'+(a.employmentType||'—')+'</span></div>').join('')+'</div><div class="data-grid mb-4"><div class="dc"><div class="dc-label">Mortgage Type</div><div class="dc-value">'+(S.mortgageType==='remortgage'?'Remortgage':'Residential Purchase')+'</div></div><div class="dc"><div class="dc-label">Due Date</div><div class="dc-value">'+dueDate+'</div></div><div class="dc"><div class="dc-label">Documents</div><div class="dc-value blue">'+docs.length+' items</div></div><div class="dc"><div class="dc-label">Sections</div><div class="dc-value">'+(new Set(docs.map(d=>d.sec))).size+'</div></div></div><div><div class="text-sm text-muted font-semibold mb-3" style="text-transform:uppercase;letter-spacing:.05em;">Documents to Request</div><div style="display:flex;flex-wrap:wrap;">'+docs.map(d=>'<span class="doc-pill">'+d.name+'</span>').join('')+'</div></div>';if(S.csToken)setConnected(S.csToken);}
+async function sendToContentSnare(){const btn=document.getElementById('sendBtn');btn.disabled=true;btn.innerHTML='<div class="spinner" style="width:16px;height:16px;margin:0;border-width:2px;"></div> Sending…';showLoading('Sending to Content Snare…','Creating clients and document request');const d=S.data,docs=getDocs().filter(doc=>S.checkedDocs.has(doc.id)),headers={'Content-Type':'application/json','Authorization':'Bearer '+S.csToken},dueDays=parseInt(localStorage.getItem('due_days')||'7');try{const clientIds=[];for(const a of d.applicants){const cr=await fetch(CS_API+'/clients',{method:'POST',headers,body:JSON.stringify({name:a.firstName+' '+a.lastName,email:a.email,phone:a.phone||undefined})});if(!cr.ok)throw new Error('Failed to create client: '+cr.status+' '+await cr.text());clientIds.push((await cr.json()).id);}const secMap={};docs.forEach(doc=>{if(!secMap[doc.sec])secMap[doc.sec]=[];secMap[doc.sec].push({name:doc.name,description:doc.desc});});const reqName=d.applicants.map(a=>a.firstName).join(' & ')+' — '+(S.mortgageType==='remortgage'?'Remortgage':'Purchase')+' — Document Request';const rr=await fetch(CS_API+'/requests',{method:'POST',headers,body:JSON.stringify({name:reqName,client_ids:clientIds,due_date:new Date(Date.now()+dueDays*86400000).toISOString().split('T')[0],sections:Object.entries(secMap).map(([title,items])=>({title,fields:items.map(i=>({label:i.name,description:i.description,type:'file'}))}))})});if(!rr.ok)throw new Error('Failed to create request: '+rr.status+' '+await rr.text());const rd=await rr.json();hideLoading();const rc=document.getElementById('resultCard');rc.classList.remove('hidden');document.getElementById('resultContent').innerHTML='<div class="alert alert-green mb-4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg><div><strong>Sent successfully!</strong> — '+docs.length+' documents requested across '+Object.keys(secMap).length+' sections.</div></div><div class="data-grid"><div class="dc"><div class="dc-label">Client(s)</div><div class="dc-value text-sm">'+d.applicants.map(a=>a.firstName+' '+a.lastName).join(', ')+'</div></div><div class="dc"><div class="dc-label">Documents</div><div class="dc-value blue">'+docs.length+' items</div></div><div class="dc full"><div class="dc-label">Request Name</div><div class="dc-value text-sm">'+reqName+'</div></div>'+(rd.id?'<div class="dc full"><div class="dc-label">Request ID</div><div class="dc-value" style="font-family:monospace;font-size:.8125rem;">'+rd.id+'</div></div>':'')+'</div>';btn.innerHTML='✓ Sent';rc.scrollIntoView({behavior:'smooth'});}catch(e){hideLoading();btn.disabled=false;btn.innerHTML='Send to Content Snare <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';const rc=document.getElementById('resultCard');rc.classList.remove('hidden');document.getElementById('resultContent').innerHTML='<div class="alert alert-destructive"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div><strong>Error:</strong> '+e.message+'</div></div>';}}
+function showLoading(t,s){document.getElementById('loadingText').textContent=t;document.getElementById('loadingSub').textContent=s;document.getElementById('loadingOverlay').classList.add('active');}
+function hideLoading(){document.getElementById('loadingOverlay').classList.remove('active');}
 </script>
 </body>
 </html>
