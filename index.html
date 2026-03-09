@@ -528,7 +528,7 @@ function buildChecklist() {
     items.forEach(doc => {
       const on = S.checkedDocs.has(doc.id);
       const avatars = d.applicants.map((a,i)=>'<div class="av av-sm '+AV_COLORS[i%AV_COLORS.length]+'" title="'+a.firstName+' '+a.lastName+'">'+(a.firstName?.[0]||'')+(a.lastName?.[0]||'')+'</div>').join('');
-      html += '<div class="doc-row '+(on?'':'unchecked')+'" id="row_'+doc.id+'" onclick="toggleDoc(''+doc.id+'')">'
+      html += '<div class="doc-row '+(on?'':'unchecked')+'" id="row_'+doc.id+'" onclick="toggleDoc(\''+doc.id+'\')">'
         +'<div class="doc-check">'+(on?'v':'')+'</div>'
         +'<div class="doc-main"><div class="doc-name">'+doc.name+'</div><div class="doc-desc">'+doc.desc+'</div></div>'
         +'<div class="doc-right"><div class="av-stack">'+avatars+'</div>'
